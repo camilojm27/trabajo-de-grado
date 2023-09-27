@@ -24,14 +24,14 @@ containers_json = json.dumps(container_info_list, indent=4)
 # Print the JSON representation of containers
 print(containers_json)
 
-# import pika
+import pika
 
-# connection = pika.BlockingConnection(
-#     pika.ConnectionParameters(host='localhost'))
-# channel = connection.channel()
+connection = pika.BlockingConnection(
+    pika.ConnectionParameters(host='localhost'))
+channel = connection.channel()
 
-# channel.queue_declare(queue='hello')
+channel.queue_declare(queue='hello')
 
-# channel.basic_publish(exchange='', routing_key='hello', body='Hello World!')
-# print(" [x] Sent 'Hello World!'")
-# connection.close()
+channel.basic_publish(exchange='', routing_key='hello', body=containers_json)
+print(" [x] Sent 'Hello World!'")
+connection.close()
