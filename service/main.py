@@ -1,37 +1,35 @@
-import docker
-import json
-
-# Create a Docker client
-client = docker.from_env()
-
-# List all containers
-containers = client.containers.list()
-
-# Convert container information to a list of dictionaries
-container_info_list = []
-for container in containers:
-    container_info = {
-        "Id": container.id,
-        "Name": container.name,
-        "Image": container.image.tags[0] if container.image.tags else None,
-        "Status": container.status,
-    }
-    container_info_list.append(container_info)
-
-# Convert the list of dictionaries to JSON format
-containers_json = json.dumps(container_info_list, indent=4)
-
-# Print the JSON representation of containers
-print(containers_json)
-
+import multiprocessing
+from app.Jobs.Subscriber import receive_data
+from app.Jobs.Publisher import send_data
 import pika
+import json
+import time
+from app.Models.Container import get_container
 
-connection = pika.BlockingConnection(
-    pika.ConnectionParameters(host='localhost'))
-channel = connection.channel()
 
-channel.queue_declare(queue='hello')
+# containers_json = getContainer()
+# connection = pika.BlockingConnection(
+#     pika.ConnectionParameters(host='localhost'))
+# channel = connection.channel()
 
-channel.basic_publish(exchange='', routing_key='hello', body=containers_json)
-print(" [x] Sent 'Hello World!'")
-connection.close()
+# channel.queue_declare(queue='hello')
+
+# channel.basic_publish(exchange='', routing_key='hello', body=containers_json)
+# print(" [x] Sent 'Hello World!'")
+# connection.close()
+
+
+if __name__ == "__main__":
+
+    # Create two processes for producer and consumer
+    # producer_process = multiprocessing.Process(target=send_data)
+    consumer_process = multiprocessing.Process(target=receive_data)
+
+    # Start both processes
+    # producer_process.start()
+    consumer_process.start()
+
+    # Wait for both processes to finish
+    consumer_process.join()
+
+    # producer_process.join()

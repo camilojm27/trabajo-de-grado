@@ -12,7 +12,7 @@ class RabbitMQConsumer extends Command
      *
      * @var string
      */
-    protected $signature = 'rabbitmq:consume';
+    protected $signature = 'amqp:consume';
     /**
      * The console command description.
      *
@@ -32,14 +32,14 @@ class RabbitMQConsumer extends Command
 
         $channel = $connection->channel();
 
-        $channel->queue_declare('hello', false, false, false, false);
+       # $channel->queue_declare('my_queue', false, false, false, false);
 
         $callback = function ($message) {
             $this->info('Received: ' . $message->body);
             // Add your message processing logic here
         };
 
-        $channel->basic_consume('hello', '', false, true, false, false, $callback);
+        $channel->basic_consume('my_queue', '', false, true, false, false, $callback);
 
         while ($channel->is_consuming()) {
             $channel->wait();
