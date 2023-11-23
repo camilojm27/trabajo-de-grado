@@ -1,12 +1,12 @@
 import pika
 
 from app.Utils.Utils import callback
+from app.Utils.Connection import connection
 
 
 def receive_data():
     # Establish a connection
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters('localhost'))
+
     channel = connection.channel()
 
     # Declare the exchange and queue
