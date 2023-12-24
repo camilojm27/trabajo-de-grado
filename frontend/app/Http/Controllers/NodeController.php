@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreNodeRequest;
 use App\Models\Node;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class NodeController extends Controller
 {
@@ -15,20 +18,17 @@ class NodeController extends Controller
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreNodeRequest $request): JsonResponse
     {
-        //
+        $validated = $request->safe(['name', 'hostname', 'ip_address']);
+        $node = new Node();
+        $node->fill($validated);
+        $node->save();
+        return response()->json(['id' => $node->id], Response::HTTP_CREATED);
     }
 
     /**

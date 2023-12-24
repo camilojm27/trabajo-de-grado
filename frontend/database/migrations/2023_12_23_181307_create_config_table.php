@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('nodes', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name')->unique();
-            $table->string('hostname')->unique();
-            $table->ipAddress();
+        Schema::create('config', function (Blueprint $table) {
+            $table->id();
+            $table->string('key')->unique();
+            $table->string('value');
+            $table->string('description');
             $table->timestamps();
-            //$table->timestamp('last_connection');
         });
     }
 
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('nodes');
+        Schema::dropIfExists('config');
     }
 };
