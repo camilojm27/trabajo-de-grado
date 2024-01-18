@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ContainerController;
+use App\Http\Controllers\NodeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,10 @@ Route::resource('containers', ContainerController::class);
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/nodes', [NodeController::class, 'index'])->middleware(['auth', 'verified'])->name('nodes');
+
+Route::get('/nodes/{node}', [NodeController::class, 'show'])->middleware(['auth', 'verified'])->name('nodeDetail');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

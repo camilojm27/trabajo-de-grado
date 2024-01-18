@@ -20,3 +20,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('nodes', [NodeController::class, 'store']);
+
+Route::get('nodes/credentials/{node}', [NodeController::class, 'showCredentials']); //Todo: add uuid validation
+
+
+

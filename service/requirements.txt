@@ -1,3 +1,5 @@
 docker
 pika
 pika-stubs
+python-dotenv
+websockets

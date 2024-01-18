@@ -32,7 +32,7 @@ class RabbitMQConsumer extends Command
 
         $channel = $connection->channel();
 
-       # $channel->queue_declare('my_queue', false, false, false, false);
+        $channel->queue_declare('my_queue', false, false, false, false);
 
         $callback = function ($message) {
             $this->info('Received: ' . $message->body);
