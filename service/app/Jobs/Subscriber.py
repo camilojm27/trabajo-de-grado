@@ -7,7 +7,7 @@ from app.Utils.Connection import connection
 def receive_data():
     # Establish a connection
 
-    channel = connection.channel()
+    channel = connection().channel()
 
     # Declare the exchange and queue
     channel.exchange_declare(exchange='amq.direct', durable=True)

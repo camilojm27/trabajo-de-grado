@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('nodes', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name')->unique();
+            $table->string('name')->unique()->nullable();
             $table->string('hostname')->unique();
             $table->ipAddress();
             $table->timestamps();

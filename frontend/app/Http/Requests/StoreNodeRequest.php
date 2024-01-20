@@ -27,7 +27,7 @@ class StoreNodeRequest extends FormRequest
     {
         //https://man7.org/linux/man-pages/man7/hostname.7.html
         return [
-            'name' => 'required|string|max:64|unique:nodes',
+            'name' => 'string|max:64|unique:nodes|nullable',
             'hostname' => ['required', 'unique:nodes', 'string', 'max:64', 'regex:/^[a-zA-Z0-9]+(?:[.-][a-zA-Z0-9]+)*$/'],
             'ip_address' => 'required|ip',
         ];

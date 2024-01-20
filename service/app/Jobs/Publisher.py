@@ -7,7 +7,7 @@ from app.Utils.Connection import connection
 
 def send_data():
 
-    channel = connection.channel()
+    channel = connection().channel()
 
     # Tiempo de vida del mensaje en milisegundos
     args = {"x-dead-letter-exchange": "amq.direct",
