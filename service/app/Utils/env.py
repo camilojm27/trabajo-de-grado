@@ -18,39 +18,13 @@ welcome_key = os.getenv("WELCOME_KEY")
 
 
 def verify_env():
-    if welcome_key is None or welcome_key == '':
-        print("Welcome key is not defined")
-        exit()
-    if rabbitmq_login is None or rabbitmq_login == '':
-        print("RabbitMQ login is not defined")
-        exit()
-    if rabbitmq_password is None or rabbitmq_password == '':
-        print("RabbitMQ password is not defined")
-        exit()
-    if rabbitmq_host is None or rabbitmq_host == '':
-        print("RabbitMQ host is not defined")
-        exit()
-    if rabbitmq_port is None or rabbitmq_port == '':
-        print("RabbitMQ port is not defined")
-        exit()
-    if client_id is None or not uuid.UUID(client_id, version=4):
-        print("Client ID is not defined")
-        app_ping, rabbitmq_ping = ping()
-        if app_ping is False:
-            print("The server is not available")
-            exit()
-        if rabbitmq_ping is False:
-            print("The RabbitMQ server is not available")
-        print("Getting new credentials, please wait...")
-        loading_indicator()
-        get_credentials()
+    get_credentials()
 
 
 def get_credentials():
+    print("Getting new credentials, please wait...")
     if client_id is None or not uuid.UUID(client_id, version=4):
-        # Make a request to the API to get the new value
-        # add headers accept json to the resquest
-        response = requests.post(os.environ.get('APP_URL') + 'api/nodes/',
+        response = requests.post(os.environ.get('APP_URL') + '/api/nodes/',
                                  data={
                                      'hostname': hostname, 'welcome_key': 1234},
                                  headers={'Accept': 'application/json'})

@@ -4,39 +4,17 @@ import json
 client = docker.from_env()
 
 
-# class Singleton:
-#     _instance = None
+def get_container() -> list:
 
-#     def __new__(cls, *args, **kwargs):
-#         if not cls._instance:
-#             cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
-#         return cls._instance
-
-
-def get_container():
-    # Create a Docker client
-
-    # List all containers
-    containers = client.containers.list()
-
-    # Convert container information to a list of dictionaries
+    containers = client.containers.list(sparse=True, all=True, filters={"status": "exited"})
     container_info_list = []
     for container in containers:
-        container_info = {
-            "Id": container.id,
-            "Name": container.name,
-            "Image": container.image.tags[0] if container.image.tags else None,
-            "Status": container.status,
-        }
-        container_info_list.append(container_info)
-        print(container_info)
+        container_info_list.append(container.attrs)
+        print(json.dumps(container.attrs, indent=4))
 
-    # Convert the list of dictionaries to JSON format
-    containers_json = json.dumps(container_info_list)
 
-    # Print the JSON representation of containers
-    print(containers_json)
-    return containers_json
+    print(container_info_list)
+    return container_info_list
 
 
 # https://docker-py.readthedocs.io/en/stable/containers.html

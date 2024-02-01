@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Models\Container;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -24,20 +25,21 @@ class CreateContainerToHost
      */
     public function handle(object $event): void
     {
-        $container = $event->container;
+        $container = new Container($event->container->attributesToArray());
+        $payload = $container->toJson();
+        $routing_key = $container->node_id;
+        error_log($payload);
+        Log::info($payload);
 
-        //TODO: Use .env values
         $connection = new AMQPStreamConnection(
-            'localhost', 5672, 'guest', 'guest'
+            env('RABBITMQ_HOST'), env('RABBITMQ_PORT', 5672), env('RABBITMQ_LOGIN'), env('RABBITMQ_PASSWORD')
         );
 
         $channel = $connection->channel();
 
-        $channel->queue_declare('my_queue', false, false, false, false);
-        $message = new AMQPMessage($container);
-        error_log($container);
-        Log::info($container);
-        $channel->basic_publish($message, 'amq.direct', 'my_queue');
+        $channel->queue_declare($routing_key, false, false, false, false);
+        $message = new AMQPMessage($payload);
+        $channel->basic_publish($message, '', $routing_key);
 
         $channel->close();
         $connection->close();

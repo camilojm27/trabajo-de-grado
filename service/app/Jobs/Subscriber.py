@@ -1,4 +1,4 @@
-import pika
+import os
 
 from app.Utils.Utils import callback
 from app.Utils.Connection import connection
@@ -6,12 +6,12 @@ from app.Utils.Connection import connection
 
 def receive_data():
     # Establish a connection
-
+    client_id = os.getenv('CLIENT_ID')
     channel = connection().channel()
 
     # Declare the exchange and queue
     channel.exchange_declare(exchange='amq.direct', durable=True)
-    result = channel.queue_declare(queue='my_queue', exclusive=False)
+    result = channel.queue_declare(queue=client_id, exclusive=False)
     queue_name = result.method.queue
 
     # Bind the queue to the exchange

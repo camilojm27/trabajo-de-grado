@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('containers', function (Blueprint $table) {
             $table->id();
+            $table->uuid('node_id');
             $table->string('name')->unique();
             $table->string('image');
             $table->string('container_id')->nullable()->unique();
@@ -20,6 +21,7 @@ return new class extends Migration
             $table->string('status')->nullable();
             $table->string('ports')->nullable();
             $table->boolean('verified');
+            $table->json('attributes')->nullable();
             $table->timestamps();
         });
     }

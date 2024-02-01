@@ -10,17 +10,26 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+
 import {Input} from "@/components/ui/input"
 import {toast} from "@/components/ui/use-toast"
 import {useForm} from "react-hook-form"
 import {router} from '@inertiajs/react'
 
 
-export default function Dashboard({auth}) {
+export default function Dashboard({auth, nodes}) {
     const { errors } = usePage().props
 
     const form = useForm({
         defaultValues: {
+            node: null,
             name: null,
             image: null,
             ports: null
@@ -52,6 +61,26 @@ export default function Dashboard({auth}) {
                         <div className="p-6 text-gray-900 dark:text-gray-100">You're logged in!</div>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+                                <FormField
+                                    control={form.control}
+                                    name="node"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <SelectTrigger className="w-[320px]">
+                                                    <SelectValue placeholder="Seleccionar un nodo" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {nodes && nodes.map((node, index) => (
+                                                        <SelectItem key={index} value={node.id} >
+                                                            {node.name || node.id}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </FormItem>
+                                    )}
+                                />
                                 <FormField
                                     control={form.control}
                                     name="image"

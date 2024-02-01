@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('hostname')->unique();
             $table->ipAddress();
             $table->timestamps();
+            $table->json('attributes')->nullable();
             //$table->timestamp('last_connection');
         });
     }

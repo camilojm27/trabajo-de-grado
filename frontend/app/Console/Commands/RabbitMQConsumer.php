@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Events\ConsumeGeneralQueue;
+use Exception;
 use Illuminate\Console\Command;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 
@@ -22,26 +24,37 @@ class RabbitMQConsumer extends Command
 
     /**
      * Execute the console command.
-     * @throws \Exception
+     * @throws Exception
      */
     public function handle(): void
     {
         $connection = new AMQPStreamConnection(
-            'localhost', 5672, 'guest', 'guest'
+            env('RABBITMQ_HOST'), env('RABBITMQ_PORT', 5672), env('RABBITMQ_LOGIN'), env('RABBITMQ_PASSWORD')
         );
 
         $channel = $connection->channel();
 
-        $channel->queue_declare('my_queue', false, false, false, false);
+        $channel->queue_declare('general', false, false, false, false);
 
         $callback = function ($message) {
             $this->info('Received: ' . $message->body);
-            // Add your message processing logic here
+            $json = json_decode($message->body, true);
+            $context = $json['context'];
+
+            switch ($context) {
+                case "containers":
+                    $this->info('Dispatching event: ' . $json['context']);
+                    ConsumeGeneralQueue::dispatch($json);
+                    break;
+                case "created":
+                    break;
+            }
         };
 
-        $channel->basic_consume('my_queue', '', false, true, false, false, $callback);
-
+        $channel->basic_consume('general', '', false, true, false, false, $callback);
         while ($channel->is_consuming()) {
+            //log to console
+            $this->info('Waiting for messages...');
             $channel->wait();
         }
 

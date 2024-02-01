@@ -10,5 +10,15 @@ def ping() -> Tuple[bool, bool]:
     return response.status_code == 200, connection().is_open
 
 
+# def connection(): return pika.BlockingConnection(
+#     pika.ConnectionParameters(host=os.environ.get('RABBITMQ_HOST')))
+
 def connection(): return pika.BlockingConnection(
-    pika.ConnectionParameters(host=os.environ.get('RABBITMQ_HOST')))
+    pika.ConnectionParameters(
+        host=os.getenv("RABBITMQ_HOST"),
+        port=os.getenv("RABBITMQ_PORT"),
+        virtual_host=os.getenv("RABBITMQ_VHOST"),
+        credentials=pika.PlainCredentials(
+            os.getenv("RABBITMQ_LOGIN"), os.getenv("RABBITMQ_PASSWORD")
+        )
+    ))

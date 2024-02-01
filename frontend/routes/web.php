@@ -29,9 +29,7 @@ Route::get('/', function () {
 
 Route::resource('containers', ContainerController::class);
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [ContainerController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/nodes', [NodeController::class, 'index'])->middleware(['auth', 'verified'])->name('nodes');
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\ContainerCreated;
 use App\Models\Container;
+use App\Models\Node;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -14,7 +15,10 @@ class ContainerController extends Controller
      */
     public function index(): \Inertia\Response
     {
-        return Inertia::render('Dashboard');
+
+        return Inertia::render('Dashboard', [
+            'nodes' => Node::all(),
+        ]);
     }
 
     /**
@@ -33,6 +37,7 @@ class ContainerController extends Controller
     {
         //Realizar la validación aparte y enviar los errores correspondientes.
         $validated = $request->validate([
+            'node' => 'required|max:255|uuid',
             'name' => 'required|max:255',
             'image' => 'required|min:5',
             'ports' => 'string'
@@ -43,9 +48,9 @@ class ContainerController extends Controller
         $container->name = $validated['name'];
         $container->image = $validated['image'];
         $container->ports = $validated['ports'];
+        $container->node_id = $validated['node'];
         $container->status = 'off';
         $container->verified = False;
-
         $container->save();
         ContainerCreated::dispatch($container);
 

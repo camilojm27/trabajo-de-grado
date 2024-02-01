@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Events\ConsumeGeneralQueue;
 use App\Events\ContainerCreated;
 use App\Listeners\CreateContainerToHost;
+use App\Listeners\UpdateContainers;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -21,6 +23,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         ContainerCreated::class => [
             CreateContainerToHost::class
+        ],
+        ConsumeGeneralQueue::class => [
+            UpdateContainers::class
         ]
     ];
 
