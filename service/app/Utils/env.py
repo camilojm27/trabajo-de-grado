@@ -1,3 +1,4 @@
+import json
 import os
 import requests
 import uuid
@@ -7,6 +8,7 @@ from dotenv import dotenv_values
 
 from app.Utils.Connection import ping
 from app.Utils.Utils import loading_indicator
+from app.Models.Info import system_info
 
 hostname = platform.node()
 client_id = os.getenv('CLIENT_ID')
@@ -22,11 +24,12 @@ def verify_env():
 
 
 def get_credentials():
+    info = json.dumps(system_info())
     print("Getting new credentials, please wait...")
     if client_id is None or not uuid.UUID(client_id, version=4):
         response = requests.post(os.environ.get('APP_URL') + '/api/nodes/',
                                  data={
-                                     'hostname': hostname, 'welcome_key': 1234},
+                                     'hostname': hostname, 'welcome_key': 1234, 'attributes': info},
                                  headers={'Accept': 'application/json'})
         if response.status_code >= 400:
             print(response.json()['message'])

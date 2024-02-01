@@ -12,7 +12,7 @@ class Node extends Model
     use HasFactory;
     use HasUuids;
 
-    protected $fillable = ['name', 'hostname', 'ip_address'];
+    protected $fillable = ['name', 'hostname', 'ip_address',  'attributes'];
 
     public function containers(): HasMany
     {

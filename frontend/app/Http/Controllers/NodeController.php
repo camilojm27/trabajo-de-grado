@@ -29,7 +29,7 @@ class NodeController extends Controller
      */
     public function store(StoreNodeRequest $request): JsonResponse
     {
-        $validated = $request->safe(['name','hostname', 'ip_address']);
+        $validated = $request->safe(['name','hostname', 'ip_address', 'attributes']);
         $node = new Node();
         $node->fill($validated);
         $node->save();
