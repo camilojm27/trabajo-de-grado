@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('containers', function (Blueprint $table) {
             $table->id();
+            $table->string('container_id')->nullable()->unique();
             $table->uuid('node_id');
             $table->string('name')->unique();
             $table->string('image');
-            $table->string('container_id')->nullable()->unique();
             $table->timestamp('created')->nullable();
             $table->string('status')->nullable();
             $table->string('ports')->nullable();

@@ -50,7 +50,6 @@ class RabbitMQConsumer extends Command
                     break;
             }
         };
-
         $channel->basic_consume('general', '', false, true, false, false, $callback);
         while ($channel->is_consuming()) {
             //log to console

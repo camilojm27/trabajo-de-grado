@@ -18,6 +18,7 @@ class NodeController extends Controller
      */
     public function index(): \Inertia\Response
     {
+        //TODO: Agregar cache
         return Inertia::render('Nodes', [
             'nodes' => Node::all(),
         ]);

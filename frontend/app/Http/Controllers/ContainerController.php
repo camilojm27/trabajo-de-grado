@@ -16,8 +16,8 @@ class ContainerController extends Controller
     public function index(): \Inertia\Response
     {
 
-        return Inertia::render('Dashboard', [
-            'nodes' => Node::all(),
+        return Inertia::render('Container/Containers', [
+            'containers' => Container::with('node')->get()
         ]);
     }
 
@@ -26,7 +26,9 @@ class ContainerController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Container/Create', [
+            'nodes' => Node::all()
+        ]);
 
     }
 

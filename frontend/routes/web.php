@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ContainerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NodeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -27,9 +28,10 @@ Route::get('/', function () {
     ]);
 });
 
-Route::resource('containers', ContainerController::class);
+Route::get('/containers', [ContainerController::class, 'index'])->middleware(['auth', 'verified'])->name('containers');
+Route::get('/containers/create', [ContainerController::class, 'create'])->middleware(['auth', 'verified'])->name('containers.create');
 
-Route::get('/dashboard', [ContainerController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/nodes', [NodeController::class, 'index'])->middleware(['auth', 'verified'])->name('nodes');
 

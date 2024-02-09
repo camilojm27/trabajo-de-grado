@@ -10,7 +10,7 @@ class Container extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'image', 'ports', 'node_id', 'status', 'verified', 'container_id'];
+    protected $fillable = ['node_id', 'name', 'image', 'ports', 'node_id', 'status', 'verified', 'container_id', 'attributes'];
 
     public function node(): BelongsTo
     {
