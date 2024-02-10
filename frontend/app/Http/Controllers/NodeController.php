@@ -19,7 +19,7 @@ class NodeController extends Controller
     public function index(): \Inertia\Response
     {
         //TODO: Agregar cache
-        return Inertia::render('Nodes', [
+        return Inertia::render('Nodes/Nodes', [
             'nodes' => Node::all(),
         ]);
     }
@@ -42,7 +42,7 @@ class NodeController extends Controller
      */
     public function show(Node $node): \Inertia\Response
     {
-        return Inertia::render('NodeDetail', [
+        return Inertia::render('Nodes/NodeDetail', [
             'node' => $node,
         ]);
     }

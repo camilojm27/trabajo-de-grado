@@ -1,12 +1,13 @@
 <?php
 
-use App\Http\Controllers\ContainerController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\NodeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ContainerController;
+use App\Http\Controllers\NodeController;
+
 
 /*
 |--------------------------------------------------------------------------
