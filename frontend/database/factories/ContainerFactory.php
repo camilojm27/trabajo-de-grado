@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ContainerState;
 use App\Models\Node;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,19 +19,24 @@ class ContainerFactory extends Factory
     public function definition(): array
     {
         $containerId = $this->faker->sha256;
+        $image = $this->faker->randomElement(['ubuntu:20.04', 'alpine:latest', 'nginx:1.21']);
+        $status = [];
+        foreach (ContainerState::cases() as $cs){
+            $status[$cs->name] = $cs->name;
+        }
 
         return [
             'container_id' => $containerId,
             'node_id' => Node::first()->id,
             'name' => $this->faker->name,
-            'image' => 'ubuntu:20.04',
+            'image' => $image,
             'created' => $this->faker->dateTimeThisYear(),
-            'status' => 'Up 2 minutes',
+            'state' => $this->faker->randomElement($status),
             'verified' => false,
             'attributes' => json_encode([
                 'Id' => $this->faker->sha256,
                 'Names' => ["/my_container"],
-                'Image' => $this->faker->randomElement(['ubuntu:20.04', 'alpine:latest', 'nginx:1.21']),
+                'Image' => $image,
                 'ImageID' => $this->faker->sha256,
                 'Command' => $this->faker->randomElement(['/bin/bash', '/bin/sh', '/usr/sbin/nginx']),
                 'Created' => $this->faker->unixTime,

@@ -18,8 +18,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('image');
             $table->timestamp('created')->nullable();
-            $table->string('status')->nullable();
-            $table->string('ports')->nullable();
+            $table->string('state')->nullable();
             $table->boolean('verified');
             $table->json('attributes')->nullable();
             $table->timestamps();

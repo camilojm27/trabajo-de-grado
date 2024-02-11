@@ -31,7 +31,7 @@ class UpdateContainers
         $existingContainer = Container::where('container_id', $container["Id"])->first();
         if ($existingContainer !== null) {
             // Update existing record
-            $existingContainer->status = $container["Status"];
+            $existingContainer->state = $container["Status"];
             $existingContainer->name = $container["Names"][0];
             $existingContainer->verified = true;
             $existingContainer->attributes = json_encode($container);
@@ -43,7 +43,7 @@ class UpdateContainers
             $newContainer->name = $container["Names"][0];
             $newContainer->image = $container['Image'];
             $newContainer->node_id = $node_id;
-            $newContainer->status = $container["Status"];
+            $newContainer->state = $container["State"];
             $newContainer->verified = true;
             $newContainer->attributes = json_encode($container);
             error_log('New container created: ' . $container["Id"] . ' on node: ' . $node_id);

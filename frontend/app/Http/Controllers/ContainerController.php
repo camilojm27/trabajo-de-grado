@@ -24,7 +24,7 @@ class ContainerController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): \Inertia\Response
     {
         return Inertia::render('Container/Create', [
             'nodes' => Node::all()
@@ -37,6 +37,7 @@ class ContainerController extends Controller
      */
     public function store(Request $request)
     {
+        //TODO: Create a proper requeste
         //Realizar la validación aparte y enviar los errores correspondientes.
         $validated = $request->validate([
             'node' => 'required|max:255|uuid',
@@ -51,7 +52,7 @@ class ContainerController extends Controller
         $container->image = $validated['image'];
         $container->ports = $validated['ports'];
         $container->node_id = $validated['node'];
-        $container->status = 'off';
+        $container->state = '';
         $container->verified = False;
         $container->save();
         ContainerCreated::dispatch($container);
