@@ -22,7 +22,7 @@ class NodeFactory extends Factory
             'name' => $name,
             'hostname' => $name,
             'ip_address' => $this->faker->ipv4,
-            'attributes' => json_encode([
+            'attributes' => [
                 "hardware" => [
                     "cpu" => $this->faker->word,
                     "cores" => $this->faker->numberBetween(2, 16),
@@ -53,7 +53,7 @@ class NodeFactory extends Factory
                     "nodejs" => "v" . $this->faker->randomFloat(1, 10, 16) . "." . $this->faker->randomNumber(1) . "." . $this->faker->randomNumber(1),
                     "npm" => $this->faker->randomFloat(1, 5, 15) . "." . $this->faker->randomNumber(1),
                 ]
-            ]),
+            ],
         ];
     }
 }

@@ -40,6 +40,7 @@ export default function DataTable({columns, data}: {columns: ColumnDef<any>[], d
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
     )
+    const [filtering, setGlobalFilter] = React.useState("")
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
@@ -60,17 +61,20 @@ export default function DataTable({columns, data}: {columns: ColumnDef<any>[], d
             columnFilters,
             columnVisibility,
             rowSelection,
+            globalFilter: filtering
         },
+        onGlobalFilterChange: setGlobalFilter,
     })
 
     return (
         <div className="w-full dark:bg-gray-800 dark:text-white ">
             <div className="flex items-center py-4">
                 <Input
-                    placeholder="Filter names..."
-                    value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                    placeholder="General filter"
+                    type="search"
+                    value={filtering}
                     onChange={(event) =>
-                        table.getColumn("name")?.setFilterValue(event.target.value)
+                        setGlobalFilter(event.target.value)
                     }
                     className="max-w-sm"
                 />
@@ -115,6 +119,22 @@ export default function DataTable({columns, data}: {columns: ColumnDef<any>[], d
                                                     header.column.columnDef.header,
                                                     header.getContext()
                                                 )}
+                                            {header.column.getCanFilter() ? (
+                                                <div className="flex items-center">
+                                                    <Input
+                                                        value={
+                                                            header.column.getFilterValue() as string ?? ""
+                                                        }
+                                                        onChange={(event) =>
+                                                            header.column.setFilterValue(
+                                                                event.target.value
+                                                            )
+                                                        }
+                                                        placeholder={`Filter by ${header.column.id}`}
+                                                        className="w-32"
+                                                    />
+                                                </div>
+                                            ) : null}
                                         </TableHead>
                                     )
                                 })}

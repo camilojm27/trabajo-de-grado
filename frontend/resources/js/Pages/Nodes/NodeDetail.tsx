@@ -7,7 +7,8 @@ import {Button} from "@/components/ui/button.jsx"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 
 export default function NodeDetail({auth, node}) {
-    const atributes = JSON.parse(node.attributes)
+    const {attributes} = node
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -59,27 +60,27 @@ export default function NodeDetail({auth, node}) {
                             <CardContent className="grid gap-4 text-sm p-6">
                                 <div className="flex items-center">
                                     <div>CPU Type</div>
-                                    <div className="font-semibold ml-auto">{atributes.hardware.cpu}</div>
+                                    <div className="font-semibold ml-auto">{attributes.hardware.cpu}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>RAM</div>
-                                    <div className="font-semibold ml-auto">{atributes.hardware.ram}</div>
+                                    <div className="font-semibold ml-auto">{attributes.hardware.ram}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>SWAP</div>
-                                    <div className="font-semibold ml-auto">{atributes.hardware.swap}</div>
+                                    <div className="font-semibold ml-auto">{attributes.hardware.swap}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>Disk (root "/")</div>
-                                    <div className="font-semibold ml-auto">{atributes.hardware.disk}</div>
+                                    <div className="font-semibold ml-auto">{attributes.hardware.disk}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>Disk Available (root "/")</div>
-                                    <div className="font-semibold ml-auto">{atributes.hardware.disk_available}</div>
+                                    <div className="font-semibold ml-auto">{attributes.hardware.disk_available}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>GPU</div>
-                                    <div className="font-semibold ml-auto">{atributes.hardware.gpu}</div>
+                                    <div className="font-semibold ml-auto">{attributes.hardware.gpu}</div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -90,27 +91,27 @@ export default function NodeDetail({auth, node}) {
                             <CardContent className="grid gap-4 text-sm p-6">
                                 <div className="flex items-center">
                                     <div>Python Version</div>
-                                    <div className="font-semibold ml-auto">{atributes.software.python}</div>
+                                    <div className="font-semibold ml-auto">{attributes.software.python}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>Docker Version</div>
-                                    <div className="font-semibold ml-auto">{atributes.software.docker}</div>
+                                    <div className="font-semibold ml-auto">{attributes.software.docker}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>PHP Version</div>
-                                    <div className="font-semibold ml-auto">{atributes.software.php.toString().slice(0,10)}</div>
+                                    <div className="font-semibold ml-auto">{attributes.software.php.toString().slice(0,10)}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>Composer Version</div>
-                                    <div className="font-semibold ml-auto">{atributes.software.composer}</div>
+                                    <div className="font-semibold ml-auto">{attributes.software.composer}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>Node JS</div>
-                                    <div className="font-semibold ml-auto">{atributes.software.nodejs}</div>
+                                    <div className="font-semibold ml-auto">{attributes.software.nodejs}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>NPM</div>
-                                    <div className="font-semibold ml-auto">{atributes.software.npm}</div>
+                                    <div className="font-semibold ml-auto">{attributes.software.npm}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>Key Network Settings</div>
@@ -125,15 +126,15 @@ export default function NodeDetail({auth, node}) {
                             <CardContent className="grid gap-4 text-sm p-6">
                                 <div className="flex items-center">
                                     <div>OS</div>
-                                    <div className="font-semibold ml-auto">{atributes.os.fullname}</div>
+                                    <div className="font-semibold ml-auto">{attributes.os.fullname}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>Kernel Version</div>
-                                    <div className="font-semibold ml-auto">{atributes.os.kernel}</div>
+                                    <div className="font-semibold ml-auto">{attributes.os.kernel}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>Arch</div>
-                                    <div className="font-semibold ml-auto">{atributes.os.arch[0]}  {atributes.os.arch[1]}</div>
+                                    <div className="font-semibold ml-auto">{attributes.os.arch[0]}  {attributes.os.arch[1]}</div>
                                 </div>
                             </CardContent>
                         </Card>

@@ -14,6 +14,10 @@ class Node extends Model
 
     protected $fillable = ['name', 'hostname', 'ip_address',  'attributes'];
 
+    protected $casts = [
+        'attributes' => 'json',
+    ];
+
     public function containers(): HasMany
     {
         return $this->hasMany(Container::class);

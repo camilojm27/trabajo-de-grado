@@ -1,7 +1,7 @@
 import {ColumnDef} from "@tanstack/react-table";
 import {Checkbox} from "@/components/ui/checkbox";
 import {Button} from "@/components/ui/button";
-import {ArrowUpDown, MoreHorizontal} from "lucide-react";
+import {ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal} from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -14,7 +14,6 @@ import {Container} from "@/types/container";
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible";
 import {Input} from "@/components/ui/input";
 import {useState} from "react";
-
 
 
 export const ContainerColumns: ColumnDef<Container>[] = [
@@ -49,14 +48,13 @@ export const ContainerColumns: ColumnDef<Container>[] = [
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
                     Name
-                    <ArrowUpDown className="ml-2 h-4 w-4"/>
-                </Button>
+                    {column.getIsSorted() === "asc" ? <ArrowUp className="ml-2 h-4 w-4"/> : <ArrowDown className="ml-2 h-4 w-4"></ArrowDown>}                </Button>
             )
         },
         cell: ({row}) => (
             <div>
-                <div className="capitalize">{row.original.name}</div>
-                <div className="capitalize">{row.original.container_id.slice(0, 12)}</div>
+                <div>{row.original.name}</div>
+                <div>{row.original.container_id.slice(0, 12)}</div>
             </div>
         ),
     },
@@ -76,7 +74,6 @@ export const ContainerColumns: ColumnDef<Container>[] = [
 
             )
         },
-        enableColumnFilter: true,
         cell: ({row}) => <div className="lowercase">{row.getValue("image")}</div>,
     },
     {
@@ -96,7 +93,7 @@ export const ContainerColumns: ColumnDef<Container>[] = [
 
     },
     {
-        accessorKey: "created_at",
+        accessorKey: "Registered at",
         header: ({column}) => {
             return (
                 <Button
@@ -108,35 +105,71 @@ export const ContainerColumns: ColumnDef<Container>[] = [
                 </Button>
             )
         },
-        cell: ({row}) => <div className="lowercase">{new Date(row.original.created_at).toDateString()}</div>,
+        cell: ({row}) => (
+            <div>
+                {
+                    (() => {
+                        const date = new Date(row.original.created_at);
+                        return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+                    })()
+                }
+            </div>
+        ),
+
 
     },
     {
-        accessorKey: "attributes",
+        accessorKey: "Created At",
         header: ({column}) => {
             return (
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Attributes
+                    Created At
+                    <ArrowUpDown className="ml-2 h-4 w-4"/>
+
+                </Button>
+            )
+        },
+        cell: ({row}) => (
+            <div>
+                {
+                    (() => {
+                        const date = new Date(row.original.created);
+                        return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+                    })()
+                }
+            </div>
+        ),
+
+
+    },
+    {
+        accessorKey: "Ports",
+        header: ({column}) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Ports
                     <ArrowUpDown className="ml-2 h-4 w-4"/>
                 </Button>)
         },
         cell: ({row}) => <Collapsible className="lowercase">{
-
-            row.original.attributes.Ports.map((port, index) => (
+            //console.log(row.original.attributes)
+            row.original.attributes.Ports?.map((port, index) => (
                 // if (index === 0) return <div key={port.PrivatePort} className="capitalize">Ports:</div>
-                <>
+                <div key={index}>
                     {index < 1 ? (
-                        <CollapsibleTrigger
-                            key={index}>{port.PrivatePort}:{port.PublicPort}/{port.Type}</CollapsibleTrigger>
+                        <CollapsibleTrigger>{port.PrivatePort}:{port.PublicPort}/{port.Type}</CollapsibleTrigger>
                     ) : (
-                        <CollapsibleContent key={index}>
+                        <CollapsibleContent>
                             {port.PrivatePort}:{port.PublicPort}/{port.Type}
                         </CollapsibleContent>
                     )}
-                </>
+                </div>
             ))
 
 

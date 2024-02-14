@@ -25,7 +25,7 @@ export default function Containers({auth, containers}: ContainersProps) {
         >
             <main className="p-4 md:p-6">
 
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-7xl mx-auto">
                     <h1 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">Containers Status</h1>
                     <div className="flex justify-center items-center bg-gray-100">
                         <DataTable columns={ContainerColumns} data={containers}/>

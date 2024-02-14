@@ -33,7 +33,7 @@ class ContainerFactory extends Factory
             'created' => $this->faker->dateTimeThisYear(),
             'state' => $this->faker->randomElement($status),
             'verified' => false,
-            'attributes' => json_encode([
+            'attributes' => [
                 'Id' => $this->faker->sha256,
                 'Names' => ["/my_container"],
                 'Image' => $image,
@@ -93,7 +93,7 @@ class ContainerFactory extends Factory
                         'Propagation' => 'rprivate',
                     ],
                 ],
-            ])
+            ]
         ];
     }
 }
