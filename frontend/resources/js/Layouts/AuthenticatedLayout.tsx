@@ -5,11 +5,15 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
 import { User } from '@/types';
+import ModeToggle from "@/components/app/mode-toggle";
+import ThemeProvider from "@/components/app/theme-provider";
 
 export default function Authenticated({ user, header, children }: PropsWithChildren<{ user: User, header?: ReactNode }>) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
     return (
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
             <nav className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,6 +40,7 @@ export default function Authenticated({ user, header, children }: PropsWithChild
                         </div>
 
                         <div className="hidden sm:flex sm:items-center sm:ms-6">
+                            <ModeToggle/>
                             <div className="ms-3 relative">
                                 <Dropdown>
                                     <Dropdown.Trigger>
@@ -137,5 +142,6 @@ export default function Authenticated({ user, header, children }: PropsWithChild
 
             <main>{children}</main>
         </div>
+        </ThemeProvider>
     );
 }

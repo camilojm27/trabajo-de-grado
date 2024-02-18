@@ -2,8 +2,16 @@ import { Badge } from "@/components/ui/badge.jsx"
 import { CardHeader, CardContent, Card } from "@/components/ui/card"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import {Link} from '@inertiajs/react'
+import {User} from "@/types";
+import {Node} from "@/types/node"
 
-export default function Nodes({auth, nodes}) {
+interface NodesProps {
+    auth: {
+        user: User
+    }
+    nodes: Node[]
+}
+export default function Nodes({auth, nodes} : NodesProps) {
     const listItems = nodes.map(node =>
         <Card key={node.id}>
             <CardHeader>
