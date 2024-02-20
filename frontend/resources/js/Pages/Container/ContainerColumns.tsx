@@ -9,11 +9,8 @@ import {
     DropdownMenuLabel, DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import * as React from "react";
 import {Container} from "@/types/container";
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible";
-import {Input} from "@/components/ui/input";
-import {useState} from "react";
 
 
 export const ContainerColumns: ColumnDef<Container>[] = [

@@ -19,12 +19,11 @@ import {
 } from "@/components/ui/select"
 
 import {Input} from "@/components/ui/input"
-import {toast} from "@/components/ui/use-toast"
+import {useToast} from "@/components/ui/use-toast"
 import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {router} from '@inertiajs/react'
-import {useState} from "react";
 import {
     Dialog,
     DialogContent,
@@ -37,7 +36,7 @@ import {
 import { Label } from '@radix-ui/react-dropdown-menu';
 import { Trash2 } from 'lucide-react';
 import { User } from '@/types';
-import { register } from 'module';
+import {Node} from "@/types/node"
 
 interface Props {
     auth: {
@@ -47,23 +46,37 @@ interface Props {
 }
 
 export default function Create({auth, nodes}: Props) {
+const { toast } = useToast()
+
 
     const formSchema = z.object({
-    node: z.string().uuid(),
-    name: z.string().min(3).max(100),
-    image: z.string().min(3).max(100),
-    ports: z.string().min(3).max(100),
-    env: z.array(z.object({name: z.string(), value: z.any()})).min(0),
-})
+        node: z.string().uuid(),
+        name: z.string().min(3).max(100),
+        image: z.string().min(3).max(100),
+        ports: z
+            .array(
+                z
+                    .string()
+                    .regex(
+                        /^(?:(?:\d{1,5}|(?:\d{1,3}\.){3}\d{1,3}):)?(\d{1,5})(?::(\d{1,5}))?(?:\/(tcp|udp|sctp))?$/
+                    )
+            )
+            .min(0),
+        env: z
+            .array(
+                z.object({ name: z.string().min(1), value: z.string().min(1) })
+            )
+            .min(0),
+    });
 
-
+    //TODO: Eliminar los valores de prueba
     const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
         defaultValues: {
             node: "9b5acc36-e6a5-4ab2-81f4-9edca73a165b",
             name: "Hola Mundo",
             image: "ubuntu:24.04",
-            ports: "80:80",
+            ports: [],
             env: [{ name: 'holapp', value: 'mundoo' }],
     },
   })
@@ -85,9 +98,15 @@ export default function Create({auth, nodes}: Props) {
         });
     }
 
-      const { fields, append, remove } = useFieldArray({
+    const envFields = useFieldArray({
     control,
     name: 'env',
+  });
+
+
+  const portFields = useFieldArray({
+    control,
+    name: 'ports',
   });
 
     return (
@@ -104,9 +123,9 @@ export default function Create({auth, nodes}: Props) {
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900 dark:text-gray-100">
+                        {/* <div className="p-6 text-gray-900 dark:text-gray-100">
                             You're logged in!
-                        </div>
+                        </div> */}
                         <Form {...form}>
                             <form
                                 onSubmit={form.handleSubmit(onSubmit)}
@@ -117,6 +136,10 @@ export default function Create({auth, nodes}: Props) {
                                     name="node"
                                     render={({ field }) => (
                                         <FormItem>
+                                            <FormLabel className="w-full">
+                                                Selecciona el nodo donde quieres
+                                                crear el contenedor:
+                                            </FormLabel>
                                             <Select
                                                 onValueChange={field.onChange}
                                                 defaultValue={field.value}
@@ -160,7 +183,7 @@ export default function Create({auth, nodes}: Props) {
                                             </FormControl>
                                             {errors.image && (
                                                 <div className="text-red-600">
-                                                    {errors.image}
+                                                    {errors.image.message}
                                                 </div>
                                             )}
                                         </FormItem>
@@ -183,7 +206,7 @@ export default function Create({auth, nodes}: Props) {
                                             </FormControl>
                                             {errors.name && (
                                                 <div className="text-red-600">
-                                                    {errors.name}
+                                                    {errors.name.message}
                                                 </div>
                                             )}
                                         </FormItem>
@@ -207,49 +230,57 @@ export default function Create({auth, nodes}: Props) {
                                             </DialogDescription>
                                         </DialogHeader>
 
-                                        {fields.map((field, index) => (
-                                            <div
-                                                key={field.id}
-                                                className="flex space-x-4 items-center"
-                                            >
-                                                <Label className="w-full">
-                                                    Nombre:
-                                                    <Input
-                                                        type="text"
-                                                        {...register(
-                                                            `env.${index}.name`
-                                                        )}
-                                                    />
-                                                </Label>
-                                                <Label className=" w-full">
-                                                    Valor:
-                                                    <Input
-                                                        type="text"
-                                                        {...register(
-                                                            `env.${index}.value`
-                                                        )}
-                                                    />
-                                                </Label>
-                                                {fields.length > 1 && (
-                                                    <Button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            remove(index)
-                                                        }
-                                                    >
-                                                        <Trash2/>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        ))}
+                                        {envFields.fields.map(
+                                            (field, index) => (
+                                                <div
+                                                    key={field.id}
+                                                    className="flex space-x-4 items-center"
+                                                >
+                                                    <Label className="w-full">
+                                                        Nombre:
+                                                        <Input
+                                                            type="text"
+                                                            {...register(
+                                                                `env.${index}.name`
+                                                            )}
+                                                        />
+                                                    </Label>
+                                                    <Label className=" w-full">
+                                                        Valor:
+                                                        <Input
+                                                            type="text"
+                                                            {...register(
+                                                                `env.${index}.value`
+                                                            )}
+                                                        />
+                                                    </Label>
+                                                    {envFields.fields.length >
+                                                        1 && (
+                                                        <Button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                envFields.remove(
+                                                                    index
+                                                                )
+                                                            }
+                                                        >
+                                                            <Trash2 />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            )
+                                        )}
                                         <Button
                                             type="button"
                                             onClick={() =>
-                                                append({ name: "", value: "" })
+                                                envFields.append({
+                                                    name: "",
+                                                    value: "",
+                                                })
                                             }
                                         >
                                             {" "}
-                                            Agregar
+                                            Agregar nueva variable
                                         </Button>
                                         {/* <DialogFooter>
                                             <Button type="submit">
@@ -258,26 +289,108 @@ export default function Create({auth, nodes}: Props) {
                                         </DialogFooter> */}
                                     </DialogContent>
                                 </Dialog>
-                                <FormField
-                                    control={form.control}
-                                    name="ports"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Puertos</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    placeholder="80:80"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            {errors.ports && (
-                                                <div className="text-red-600">
-                                                    {errors.ports}
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline">
+                                            Puertos
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[725px] ">
+                                        <DialogHeader>
+                                            <DialogTitle>
+                                                Agregar Puertos
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                Make changes to your profile
+                                                here. Click save when you're
+                                                done.
+                                            </DialogDescription>
+                                        </DialogHeader>
+
+                                        {portFields.fields.map(
+                                            (field, index) => (
+                                                <div
+                                                    key={field.id}
+                                                    className="flex space-x-4 items-center"
+                                                >
+                                                    <Label className="w-full">
+                                                        Port String:
+                                                        <Input
+                                                            type="text"
+                                                            {...register(
+                                                                `ports.${index}`
+                                                            )}
+                                                            placeholder="8080:80/udp"
+                                                        />
+                                                    </Label>
+
+                                                    {portFields.fields.length >
+                                                        1 && (
+                                                        <Button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                portFields.remove(
+                                                                    index
+                                                                )
+                                                            }
+                                                        >
+                                                            <Trash2 />
+                                                        </Button>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </FormItem>
-                                    )}
-                                />
+                                            )
+                                        )}
+                                        <Button
+                                            type="button"
+                                            onClick={() =>
+                                                portFields.append("")
+                                            }
+                                        >
+                                            {" "}
+                                            Agregar nueva variable
+                                        </Button>
+                                        {/* <DialogFooter>
+                                            <Button type="submit">
+                                                Save changes
+                                            </Button>
+                                        </DialogFooter> */}
+                                    </DialogContent>
+                                </Dialog>
+                                {envFields.fields.map((field, index) => (
+                                    <div
+                                        key={field.id}
+                                        className="flex space-x-4 items-center"
+                                    >
+                                        <Label className="w-full">
+                                            Nombre:
+                                            <Input
+                                                type="text"
+                                                {...register(
+                                                    `env.${index}.name`
+                                                )}
+                                            />
+                                        </Label>
+                                        <Label className=" w-full">
+                                            Valor:
+                                            <Input
+                                                type="text"
+                                                {...register(
+                                                    `env.${index}.value`
+                                                )}
+                                            />
+                                        </Label>
+                                        {envFields.fields.length > 1 && (
+                                            <Button
+                                                type="button"
+                                                onClick={() =>
+                                                    envFields.remove(index)
+                                                }
+                                            >
+                                                <Trash2 />
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
                                 <FormDescription>
                                     Cuando el servidor este disponible se creará
                                     el contenedor.

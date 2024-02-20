@@ -67,7 +67,7 @@ export default function DataTable({columns, data}: {columns: ColumnDef<any>[], d
     })
 
     return (
-        <div className="w-full dark:bg-gray-800 dark:text-white ">
+        <div className="w-full dark:bg-gray-800 p-2 rounded-xl ">
             <div className="flex items-center py-4">
                 <Input
                     placeholder="General filter"

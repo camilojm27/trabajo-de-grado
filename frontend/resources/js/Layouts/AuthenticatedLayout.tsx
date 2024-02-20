@@ -7,12 +7,15 @@ import { Link } from '@inertiajs/react';
 import { User } from '@/types';
 import ModeToggle from "@/components/app/mode-toggle";
 import ThemeProvider from "@/components/app/theme-provider";
+import { Toaster } from "@/components/ui/toaster"
+
 
 export default function Authenticated({ user, header, children }: PropsWithChildren<{ user: User, header?: ReactNode }>) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <Toaster/>
 
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
             <nav className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">

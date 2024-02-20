@@ -4,6 +4,12 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import {Link} from '@inertiajs/react'
 import {User} from "@/types";
 import {Node} from "@/types/node"
+import { NodesColumns } from "./NodesColumns";
+import DataTable from "@/components/app/DataTable";
+import { LayoutGrid, Sheet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+
 
 interface NodesProps {
     auth: {
@@ -12,6 +18,8 @@ interface NodesProps {
     nodes: Node[]
 }
 export default function Nodes({auth, nodes} : NodesProps) {
+    const [showDataTable, setShowDataTable] = useState(false);
+
     const listItems = nodes.map(node =>
         <Card key={node.id}>
             <CardHeader>
@@ -35,15 +43,33 @@ export default function Nodes({auth, nodes} : NodesProps) {
   return (
       <AuthenticatedLayout
           user={auth.user}
-          header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Nodes</h2>}
+          header={
+              <div className="flex justify-between">
+                  <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+                      Nodes
+                  </h2>
+                  {showDataTable ? (
+                      <Button onClick={() => setShowDataTable(false)}>
+                          Vista en Galeria <LayoutGrid />
+                      </Button>
+                  ) : (
+                      <Button onClick={() => setShowDataTable(true)}>
+                          Vista en Tabla <Sheet />
+                      </Button>
+                  )}
+              </div>
+          }
       >
           <main className="p-4 md:p-6">
-              <div className="max-w-4xl mx-auto">
-                  <h1 className="text-xl md:text-2xl font-bold mb-4">Servers Status</h1>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {listItems}
+              {showDataTable ? (
+                  <DataTable columns={NodesColumns} data={nodes} />
+              ) : (
+                  <div className="max-w-4xl mx-auto">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {listItems}
+                      </div>
                   </div>
-              </div>
+              )}
           </main>
       </AuthenticatedLayout>
   );
