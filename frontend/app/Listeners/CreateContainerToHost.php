@@ -8,6 +8,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
+use stdClass;
 
 class CreateContainerToHost
 {
@@ -26,10 +27,16 @@ class CreateContainerToHost
     public function handle(object $event): void
     {
         $container = new Container($event->container->attributesToArray());
-        $payload = $container->toJson();
+        $payload = [
+            "action" => "CREATE",
+            "model" => "container",
+            "data" => $container,
+        ];
+        $payload = json_encode($payload);
         $routing_key = $container->node_id;
         error_log($payload);
         Log::info($payload);
+
 
         $connection = new AMQPStreamConnection(
             env('RABBITMQ_HOST'), env('RABBITMQ_PORT', 5672), env('RABBITMQ_LOGIN'), env('RABBITMQ_PASSWORD')

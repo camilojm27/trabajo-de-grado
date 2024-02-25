@@ -17,6 +17,7 @@ def get_container() -> list:
 
 
 # https://docker-py.readthedocs.io/en/stable/containers.html
-def create_container(image, name, ports):
+def create_container(image, name, attributes):
+    print(attributes)
     client.containers.run(image=image, name=name, detach=True)
     print('Contenedor creado')

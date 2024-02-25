@@ -70,6 +70,16 @@ class NodeController extends Controller
             return response()->json(['error' => 'Error creating user'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
+        $response = Http::withBasicAuth($adminUser, $adminPassword)
+            ->put($rmqhost.'15672/api/permissions/%2F/'.$user, [
+                'configure' => '.*',
+                'write' => '.*',
+                'read' => '.*'
+            ]);
+        if ($response->failed()) {
+            return response()->json(['error' => 'Error setting permissions'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
         elseif ($response->status() == 201 or $response->status() == 204) {
             $credentials = [
                 'RABBITMQ_HOST' => $rmqhost,

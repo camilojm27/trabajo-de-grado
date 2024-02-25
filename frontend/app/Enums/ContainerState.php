@@ -10,4 +10,5 @@ enum ContainerState
     case EXITED;
     case PAUSED;
     case DEAD;
+    case SEND;
 }

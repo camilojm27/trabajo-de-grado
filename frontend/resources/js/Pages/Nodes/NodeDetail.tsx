@@ -5,8 +5,17 @@ import {ResponsiveLine} from "@nivo/line"
 import {ResponsiveBar} from "@nivo/bar"
 import {Button} from "@/components/ui/button.jsx"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
+import { User } from "@/types";
+import { Node } from "@/types/node";
 
-export default function NodeDetail({auth, node}) {
+interface Props {
+    auth: {
+        user: User;
+    };
+    node: Node;
+}
+
+export default function NodeDetail({auth, node}: Props) {
     const {attributes} = node
 
     return (
@@ -24,8 +33,8 @@ export default function NodeDetail({auth, node}) {
                     <Link className="font-bold" href="#">
                         Server Details
                     </Link>
-                    <Link className="text-gray-500 dark:text-gray-400" href="#">
-                        Logs
+                    <Link className="text-gray-500 dark:text-gray-400" href={`/containers/${node.id}`}>
+                        Containers
                     </Link>
                     <Link className="text-gray-500 dark:text-gray-400" href="#">
                         Settings
@@ -37,7 +46,7 @@ export default function NodeDetail({auth, node}) {
             <div className="flex flex-col w-full min-h-screen bg-white">
 
                 <main
-                    className="flex min-h-[calc(100vh-_theme(spacing.16))] bg-gray-100/40 flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10 dark:bg-gray-800/40">
+                    className="flex min-h-[calc(100vh-_theme(spacing.16))]  flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10 dark:bg-gray-900">
                     <div className="max-w-6xl w-full mx-auto grid gap-2">
                         <h1 className="font-semibold text-3xl">Server Details</h1>
                         <div className="flex items-center text-sm gap-2">

@@ -7,9 +7,21 @@ from app.Models.Container import create_container
 
 def callback(ch, method, properties, body):
     message = json.loads(body)
+    data = message['data']
     print("Received: ", message)
+    
+    match message['action']:
+        case 'CREATE':
+            match message['model']:
+                case 'container':
+                    print('Creating container...')
+                    #loading_indicator()
+                    create_container(
+                        data['image'], data['name'], data['attributes'], )
 
-    create_container(message['image'], message['name'], message['ports'])
+            
+
+
 
 
 def loading_indicator():

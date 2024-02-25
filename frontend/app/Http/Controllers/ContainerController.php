@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContainerState;
 use App\Events\ContainerCreated;
 use App\Models\Container;
 use App\Models\Node;
@@ -40,31 +41,47 @@ class ContainerController extends Controller
         //TODO: Create a proper requeste
         //Realizar la validación aparte y enviar los errores correspondientes.
         $validated = $request->validate([
-            'node' => 'required|max:255|uuid',
-            'name' => 'required|max:255',
-            'image' => 'required|min:5',
-            'ports' => 'string'
+            'node' => 'required|uuid',
+            'name' => 'required',
+            'image' => 'required',
+            'attributes' => 'required',
         ]);
-
 
         $container = new Container();
         $container->name = $validated['name'];
         $container->image = $validated['image'];
-        $container->ports = $validated['ports'];
         $container->node_id = $validated['node'];
-        $container->state = '';
+        $container->attributes = $validated['attributes'];
+        $container->state = "send";
         $container->verified = False;
         $container->save();
         ContainerCreated::dispatch($container);
+        return to_route('containers.show', $container);
 
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Container $container)
+    public function show(Container $container): \Inertia\Response
     {
-        //
+        //Return inertia render and the container
+
+        return Inertia::render('Container/Show', [
+            'container' => $container
+        ]);
+
+    }
+
+
+    /**
+     * Display the specified resource.
+     */
+    public function showNode(Node $node): \Inertia\Response
+    {
+        return Inertia::render('Container/Containers', [
+            'containers' => Container::where('node_id', $node->id)->get()
+        ]);
     }
 
     /**

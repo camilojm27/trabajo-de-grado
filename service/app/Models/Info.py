@@ -90,5 +90,5 @@ def get_info():
         "os": get_os_info(),
         "software": get_version_info()
     }
-    print(json.dumps(system_info, indent=4))
+    #print(json.dumps(system_info, indent=4))
     return system_info
