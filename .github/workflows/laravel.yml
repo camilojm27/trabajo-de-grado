@@ -37,8 +37,10 @@ jobs:
         cd platform
         mkdir -p database
         touch database/database.sqlite
-    - name: Execute tests (Unit and Feature tests) via PHPUnit
+    - name: Execute tests (Unit and Feature tests) via artisan (Pest)
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite
-      run: platform/vendor/bin/phpunit
+      run: |
+        cd platform
+        php artisan test
