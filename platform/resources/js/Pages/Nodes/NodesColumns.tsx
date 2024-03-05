@@ -302,7 +302,6 @@ export const NodesColumns: ColumnDef<Node>[] = [
         },
         cell: ({ row }) => <div>{row.original.attributes.os.kernel}</div>,
     },
-    ,
     {
         accessorKey: "attributes.os.fullname",
         id: "Distribution",
@@ -374,7 +373,6 @@ export const NodesColumns: ColumnDef<Node>[] = [
             </div>
         ),
     },
-    ,
     {
         accessorKey: "attributes.software.docker",
         id: "Docker",

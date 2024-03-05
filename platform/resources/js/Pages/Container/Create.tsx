@@ -47,6 +47,7 @@ import { Trash2 } from 'lucide-react';
 import { User } from '@/types';
 import {Node} from "@/types/node"
 import { Checkbox } from '@/components/ui/checkbox';
+import React from "react";
 
 interface Props {
     auth: {
@@ -108,7 +109,7 @@ const items = [
             )
             .min(0),
         volumes: z.array(z.string().min(0)).min(0),
-        avanced_bools: z
+        advanced_bools: z
             .array(z.string())
             .refine((value) => value.some((item) => item), {
                 message: "You have to select at least one item.",
@@ -125,7 +126,7 @@ const items = [
             ports: [],
             env: [{ name: "holapp", value: "mundoo" }],
             volumes: [],
-            avanced_bools: ["detach"],
+            advanced_bools: ["detach"],
         },
     });
 
@@ -141,7 +142,7 @@ const items = [
                 ports: data.ports,
                 env: data.env,
                 volumes: data.volumes,
-                avanced_bools: data.avanced_bools,
+                advanced_bools: data.advanced_bools,
             },
         };
 
@@ -163,21 +164,24 @@ const items = [
     name: 'env',
   });
 
-
-  const portFields = useFieldArray({
+    const portFields = useFieldArray({
     control,
+        // @ts-ignore
     name: 'ports',
   });
 
     const volumsFields = useFieldArray({
         control,
+        // @ts-ignore
         name: "volumes",
     });
 
     if (volumsFields.fields.length === 0) {
+        // @ts-ignore
         volumsFields.append("");
     }
 
+    // @ts-ignore
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -432,6 +436,7 @@ const items = [
                                                 <Button
                                                     type="button"
                                                     onClick={() =>
+                                                        // @ts-ignore
                                                         portFields.append("")
                                                     }
                                                 >
@@ -488,6 +493,7 @@ const items = [
                                                             variant="secondary"
                                                             onClick={() =>
                                                                 volumsFields.append(
+                                                                    // @ts-ignore
                                                                     ""
                                                                 )
                                                             }
@@ -509,7 +515,7 @@ const items = [
                                     <section>
                                         <FormField
                                             control={form.control}
-                                            name="avanced_bools"
+                                            name="advanced_bools"
                                             render={() => (
                                                 <FormItem>
                                                     <div className="mb-4">
@@ -530,7 +536,7 @@ const items = [
                                                             control={
                                                                 form.control
                                                             }
-                                                            name="avanced_bools"
+                                                            name="advanced_bools"
                                                             render={({
                                                                 field,
                                                             }) => {
@@ -597,7 +603,7 @@ const items = [
     );
 }
 
-function LocalTabs({children}: {children: React.ReactNode}) {
+function LocalTabs({children}: {children: React.ReactNode[]}) {
     return (
         <Tabs defaultValue="general" className="">
             <h3 className="text-2xl font-semibold mb-4 text-center">

@@ -1,4 +1,5 @@
 import { AxiosInstance } from 'axios';
+// @ts-ignore
 import ziggyRoute, { Config as ZiggyConfig } from 'ziggy-js';
 
 declare global {

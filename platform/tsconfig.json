@@ -12,7 +12,8 @@
         "noEmit": true,
         "paths": {
             "@/*": ["./resources/js/*"]
-        }
+        },
+        "typeRoots": ["node_modules/yup"],
     },
     "include": ["resources/js/**/*.ts", "resources/js/**/*.tsx", "resources/js/**/*.d.ts"]
 }
