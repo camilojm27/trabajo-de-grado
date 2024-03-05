@@ -35,6 +35,10 @@ jobs:
       run: |
         cd platform
         php artisan key:generate
+    - name: Build Frontend
+      run: |
+        cd platform
+        npm run build
     - name: Directory Permissions
       run: |
         cd platform
