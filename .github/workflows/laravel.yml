@@ -1,0 +1,57 @@
+name: Laravel
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  laravel-tests:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
+      with:
+        php-version: '8.2'
+    -  uses: actions/setup-node@v4.0.2
+       with:
+          node-version: 20
+    - uses: actions/checkout@v3
+    - name: Copy .env
+      run: |
+        cd platform
+        php -r "file_exists('.env') || copy('.env.example', '.env');"
+    - name: Install PHP Dependencies
+      run: |
+        cd platform
+        composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+    - name: Install JavaScript Dependencies
+      run: |
+        cd platform
+        npm install
+    - name: Generate key
+      run: |
+        cd platform
+        php artisan key:generate
+    - name: Build Frontend
+      run: |
+        cd platform
+        npm run build
+    - name: Directory Permissions
+      run: |
+        cd platform
+        chmod -R 777 storage bootstrap/cache
+    - name: Create Database
+      run: |
+        cd platform
+        mkdir -p database
+        touch database/database.sqlite
+    - name: Execute tests (Unit and Feature tests) via artisan (Pest)
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
+      run: |
+        cd platform
+        php artisan test
