@@ -1,6 +1,0 @@
-docker
-pika
-pika-stubs
-python-dotenv
-websockets
-psutil
