@@ -16,13 +16,13 @@ var startCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		appUrl := viper.GetString("APP_URL")
 		nodeID := viper.GetString("NODE_ID")
-		welcomekey := viper.GetString("WELCOME_KEY")
+		welcomeKey := viper.GetString("WELCOME_KEY")
 		rabbitmqHost := viper.GetString("RABBITMQ_HOST")
 		rabbitmqPort := viper.GetString("RABBITMQ_PORT")
 		rabbitmqLogin := viper.GetString("RABBITMQ_LOGIN")
 		rabbitmqPassword := viper.GetString("RABBITMQ_PASSWORD")
-		println(appUrl, welcomekey, nodeID, rabbitmqHost, rabbitmqPort, rabbitmqLogin, rabbitmqPassword)
-		if appUrl == "" || welcomekey == "" {
+		println(appUrl, welcomeKey, nodeID, rabbitmqHost, rabbitmqPort, rabbitmqLogin, rabbitmqPassword)
+		if appUrl == "" || welcomeKey == "" {
 			log.Fatal("Configuration is missing, run 'pgc config' to set configuration")
 		}
 		if nodeID == "" || rabbitmqHost == "" || rabbitmqPort == "" || rabbitmqLogin == "" || rabbitmqPassword == "" {

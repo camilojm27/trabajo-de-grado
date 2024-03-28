@@ -8,19 +8,19 @@ import (
 	"github.com/spf13/viper"
 )
 
-var NodeID = viper.GetString("NODE_ID")
-
 func Response(ctx context.Context, client *RabbitMQClient, payload Payload, action string, platformID uint64, err error) {
+	var NodeID = viper.GetString("NODE_ID")
+
 	if err != nil {
 		fmt.Printf("Error During %s: %v\n", action, err)
 
 		response := ResponseMsg{
 			Action:  action,
+			NodeID:  NodeID,
+			PID:     platformID,
 			Stataus: "error",
 			Error:   err.Error(),
 			Data:    payload,
-			PID:     platformID,
-			NodeID:  NodeID,
 		}
 		sendResponse(ctx, response, client)
 		return
@@ -28,20 +28,17 @@ func Response(ctx context.Context, client *RabbitMQClient, payload Payload, acti
 
 	response := ResponseMsg{
 		Action:  action,
+		NodeID:  NodeID,
+		PID:     platformID,
 		Stataus: "success",
 		Error:   "",
 		Data:    payload,
-		PID:     platformID,
-		NodeID:  NodeID,
 	}
 	sendResponse(ctx, response, client)
 
 }
 
 func sendResponse(ctx context.Context, response ResponseMsg, client *RabbitMQClient) {
-
-	defer client.Close()
-	//TODO: Context
 
 	jsonDataBytes, err := json.Marshal(response)
 	if err != nil {

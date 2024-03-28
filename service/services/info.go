@@ -3,11 +3,13 @@ package services
 import (
 	"encoding/json"
 	"github.com/camilojm27/trabajo-de-grado/pgc/types"
+	"runtime"
+	"strconv"
 )
 
 var info = types.SystemInfo{
 	OS: types.OS{
-		System:   "Linux",
+		System:   runtime.GOOS,
 		Kernel:   "6.6.13-200.fc39.x86_64",
 		Name:     "Fedora Linux",
 		Fullname: "Fedora Linux 39 (Workstation Edition)",
@@ -15,7 +17,7 @@ var info = types.SystemInfo{
 		Arch:     []string{"64bit", "ELF"},
 	},
 	Hardware: types.Hardware{
-		CPU:       "AMD Ryzen 5 7520U with Radeon Graphics",
+		CPU:       strconv.Itoa(runtime.NumCPU()),
 		Cores:     4,
 		Threads:   8,
 		Mhz:       "2800.00 MHz",

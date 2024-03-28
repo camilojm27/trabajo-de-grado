@@ -45,7 +45,6 @@ func (c *RabbitMQClient) Close() error {
 }
 
 func (c *RabbitMQClient) Consume(ctx context.Context, queueName string, handler func(d amqp091.Delivery)) error {
-
 	// Declare the queue before consuming
 	_, err := c.ch.QueueDeclare(
 		queueName,
@@ -59,10 +58,11 @@ func (c *RabbitMQClient) Consume(ctx context.Context, queueName string, handler 
 		return fmt.Errorf("failed to declare queue: %w", err)
 	}
 
-	deliveries, err := c.ch.Consume(
+	deliveries, err := c.ch.ConsumeWithContext(
+		ctx,
 		queueName,
 		"",
-		true,  // Auto-ack
+		false, // Auto-ack
 		false, // Exclusive
 		false, // No-local
 		false, // No-wait
@@ -72,19 +72,18 @@ func (c *RabbitMQClient) Consume(ctx context.Context, queueName string, handler 
 		return fmt.Errorf("failed to consume messages: %w", err)
 	}
 
-	for {
-		select {
-		case d, ok := <-deliveries:
-			if !ok {
-				// Channel closed, likely due to context cancellation or error
-				return nil
-			}
-			handler(d)
-		case <-ctx.Done():
-			// Context canceled, stop consuming
-			return c.ch.Cancel(queueName, false)
+	forever := make(chan bool)
+
+	go func() {
+		for d := range deliveries {
+			handler(d) // Call the provided handler function
 		}
-	}
+	}()
+
+	fmt.Println("Waiting for messages")
+	<-forever // Block until the context is cancelled or a signal is received
+
+	return nil
 }
 
 func (c *RabbitMQClient) Publish(ctx context.Context, body []byte) error {

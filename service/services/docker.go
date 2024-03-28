@@ -2,13 +2,17 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	t "github.com/camilojm27/trabajo-de-grado/pgc/types"
 	"log"
 	"strings"
+	"time"
+
+	t "github.com/camilojm27/trabajo-de-grado/pgc/types"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 )
@@ -63,7 +67,7 @@ func Create(ctx context.Context, containerData t.ContainerRequest) (types.Contai
 		return types.ContainerJSON{}, err
 	}
 
-	inspect, errI := Inspect(resp.ID)
+	inspect, errI := Inspect(ctx, resp.ID)
 
 	//TODO: Cuando se envie este error, se debe validad en la plataforma de que el contenedor fue creado
 	// pero no se pudo iniciar
@@ -93,7 +97,7 @@ func Create(ctx context.Context, containerData t.ContainerRequest) (types.Contai
 
 // }
 
-func Delete(containerID string) (bool, error) {
+func Delete(ctx context.Context, containerID string) (bool, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return false, err
@@ -101,11 +105,11 @@ func Delete(containerID string) (bool, error) {
 
 	defer cli.Close()
 
-	if err := cli.ContainerStop(context.Background(), containerID, container.StopOptions{}); err != nil {
+	if err := cli.ContainerStop(ctx, containerID, container.StopOptions{}); err != nil {
 		log.Println(err)
 	}
 
-	if err := cli.ContainerRemove(context.Background(), containerID, container.RemoveOptions{
+	if err := cli.ContainerRemove(ctx, containerID, container.RemoveOptions{
 		Force: true,
 	}); err != nil {
 		return false, err
@@ -115,13 +119,13 @@ func Delete(containerID string) (bool, error) {
 
 }
 
-func Inspect(containerID string) (types.ContainerJSON, error) {
+func Inspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return types.ContainerJSON{}, err
 	}
 
-	info, err := cli.ContainerInspect(context.Background(), containerID)
+	info, err := cli.ContainerInspect(ctx, containerID)
 	if err != nil {
 		return types.ContainerJSON{}, err
 	}
@@ -132,7 +136,7 @@ func Inspect(containerID string) (types.ContainerJSON, error) {
 
 }
 
-func Start(containerID string) (bool, error) {
+func Start(ctx context.Context, containerID string) (bool, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return false, err
@@ -140,7 +144,7 @@ func Start(containerID string) (bool, error) {
 
 	defer cli.Close()
 
-	if err := cli.ContainerStart(context.Background(), containerID, container.StartOptions{}); err != nil {
+	if err := cli.ContainerStart(ctx, containerID, container.StartOptions{}); err != nil {
 		return false, err
 	}
 
@@ -148,7 +152,7 @@ func Start(containerID string) (bool, error) {
 
 }
 
-func Stop(containerID string, timeout int) (bool, error) {
+func Stop(ctx context.Context, containerID string, timeout int) (bool, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return false, err
@@ -156,11 +160,147 @@ func Stop(containerID string, timeout int) (bool, error) {
 
 	defer cli.Close()
 
-	if err := cli.ContainerStop(context.Background(), containerID, container.StopOptions{}); err != nil {
+	if err := cli.ContainerStop(ctx, containerID, container.StopOptions{}); err != nil {
 		return false, err
 	}
 
 	return true, nil
+}
+
+func Restart(ctx context.Context, containerID string, timeout int) (bool, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return false, err
+	}
+
+	defer cli.Close()
+
+	if err := cli.ContainerRestart(ctx, containerID, container.StopOptions{}); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func Pause(ctx context.Context, containerID string) (bool, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return false, err
+	}
+
+	defer cli.Close()
+
+	if err := cli.ContainerPause(ctx, containerID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func Kill(ctx context.Context, containerID string) (bool, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return false, err
+	}
+
+	defer cli.Close()
+
+	if err := cli.ContainerKill(ctx, containerID, "SIGKILL"); err != nil {
+		return false, err
+	}
+
+	return true, nil
+
+}
+
+func Unpause(ctx context.Context, containerID string) (bool, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return false, err
+	}
+
+	defer cli.Close()
+
+	if err := cli.ContainerUnpause(ctx, containerID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func ListContainers(ctx context.Context) ([]types.Container, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer cli.Close()
+
+	list, err := cli.ContainerList(ctx, container.ListOptions{
+		All: true,
+	})
+
+	return list, err
+
+}
+
+func SendContainersListBasedOnEventsAndTime(rmqClient *RabbitMQClient, ctx context.Context) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Subscribe to Docker events (optional for sending based on events)
+	eventChan, errChan := cli.Events(ctx, types.EventsOptions{
+		Filters: filters.NewArgs(
+			filters.KeyValuePair{
+				Key:   "type",
+				Value: "container",
+			},
+		),
+	})
+
+	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
+
+	fmt.Println("Listening to Docker events and sending container list every minute...")
+
+	var lastEvent time.Time
+	const shortPeriod = 10 * time.Second
+	sendContainers(ctx, rmqClient)
+
+	for {
+		select {
+		case <-ticker.C:
+			sendContainers(ctx, rmqClient)
+
+		case event := <-eventChan:
+			if eventChan != nil { // Check if event channel is initialized (optional)
+				currentTimestamp := time.Now()
+				if currentTimestamp.Sub(lastEvent) > shortPeriod {
+					fmt.Printf("Received event: %v\n", event.Action)
+					sendContainers(ctx, rmqClient)
+					lastEvent = currentTimestamp
+				}
+			}
+		case err := <-errChan:
+			if errChan != nil { // Check if error channel is initialized (optional)
+				log.Printf("Error receiving event: %v\n", err)
+			}
+		}
+	}
+}
+
+func sendContainers(ctx context.Context, rmqClient *RabbitMQClient) {
+	list, err := ListContainers(ctx)
+	if err != nil {
+		log.Println("Error Getting ContainerList: ", err)
+	}
+	jsonData, err := json.Marshal(list)
+	if err != nil {
+		log.Println("Error marshalling ContainerList: ", err)
+	}
+	Response(ctx, rmqClient, string(jsonData), "LIST:CONTAINERS", 0, err)
 }
 
 func formatPorts(ports []string) map[nat.Port][]nat.PortBinding {
