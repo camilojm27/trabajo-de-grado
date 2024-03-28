@@ -87,6 +87,7 @@ export interface Container {
     image: string;
     created: string;
     status: string;
+    state: string;
     verified: boolean;
     attributes: Attributes;
     created_at: string;

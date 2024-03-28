@@ -2,13 +2,15 @@
 
 namespace App\Enums;
 
-enum ContainerState
+enum ContainerState: string
 {
-    case CREATED;
-    case RUNNING;
-    case RESTARTING;
-    case EXITED;
-    case PAUSED;
-    case DEAD;
-    case SEND;
+    case CREATED = "created";
+    case RUNNING = "running";
+    case RESTARTING = "restarting";
+    case EXITED = "exited";
+    case PAUSED = "paused";
+    case DEAD = "dead";
+    case SEND = "send";
+    case ERROR = "error";
+    case SUCCESS = "success";
 }

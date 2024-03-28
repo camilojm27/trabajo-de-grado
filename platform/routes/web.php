@@ -35,6 +35,9 @@ Route::post('/containers/store', [ContainerController::class, 'store'])->middlew
 Route::get('/containers/show/{container}', [ContainerController::class, 'show'])->middleware(['auth', 'verified'])->name('containers.show');;
 Route::get('/containers/{node}', [ContainerController::class, 'showNode'])->middleware(['auth', 'verified'])->name('containers.node');
 
+Route::post('/containers/start/{container}', [ContainerController::class, 'start'])->middleware(['auth', 'verified'])->name('containers.store');
+Route::post('/containers/recreate/{container}', [ContainerController::class, 'recreate'])->middleware(['auth', 'verified'])->name('containers.store');
+
 Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/nodes', [NodeController::class, 'index'])->middleware(['auth', 'verified'])->name('nodes');

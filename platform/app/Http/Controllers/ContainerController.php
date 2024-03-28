@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ContainerState;
-use App\Events\ContainerCreated;
+use App\Events\SendCreateContainer;
 use App\Models\Container;
 use App\Models\Node;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Log;
 
 class ContainerController extends Controller
 {
@@ -36,8 +38,9 @@ class ContainerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
+
         //TODO: Create a proper requeste
         //Realizar la validación aparte y enviar los errores correspondientes.
         $validated = $request->validate([
@@ -55,9 +58,49 @@ class ContainerController extends Controller
         $container->state = "send";
         $container->verified = False;
         $container->save();
-        ContainerCreated::dispatch($container);
+        try {
+            SendCreateContainer::dispatch([
+                "pid" => $container->id,
+                "data" => $container->attributesToArray()
+            ], "CREATE:CONTAINER");
+        }
+        catch (\Exception $e) {
+            error_log($e->getMessage());
+            Log::error($e->getMessage());
+            $container->delete();
+            return to_route('containers.show', 00);
+
+        }
         return to_route('containers.show', $container);
 
+    }
+
+    public function start(Container $container): void
+    {
+
+        $payload = [
+            "pid" => $container->id,
+            "container_id" => $container->container_id,
+            "node_id" => $container->node_id,
+        ];
+        SendCreateContainer::dispatch($payload, "START:CONTAINER");
+    }
+    public function recreate(Container $container): void
+    {
+        try {
+            SendCreateContainer::dispatch([
+                "pid" => $container->id,
+                "data" => $container->attributesToArray()
+            ], "CREATE:CONTAINER");
+            $container->state = "send";
+            $container->verified = False;
+            $container->save();
+        }
+        catch (\Exception $e) {
+            error_log($e->getMessage());
+            Log::error($e->getMessage());
+            dump($e->getMessage());
+        }
     }
 
     /**

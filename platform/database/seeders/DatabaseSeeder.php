@@ -14,8 +14,8 @@ class DatabaseSeeder extends Seeder
     {
         $this::call(ConfigSeeder::class);
         // \App\Models\User::factory(10)->create();
-        \App\Models\Node::factory(2)->create();
-        \App\Models\Container::factory(10)->create();
+//        \App\Models\Node::factory(1)->create();
+//        \App\Models\Container::factory(10)->create();
 
          \App\Models\User::factory()->create([
              'name' => 'Test User',

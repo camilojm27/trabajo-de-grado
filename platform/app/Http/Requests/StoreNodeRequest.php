@@ -26,6 +26,7 @@ class StoreNodeRequest extends FormRequest
     public function rules(): array
     {
         //https://man7.org/linux/man-pages/man7/hostname.7.html
+        // TODO: Validate json
         return [
             'name' => 'string|max:64|unique:nodes|nullable',
             'hostname' => ['required', 'unique:nodes', 'string', 'max:64', 'regex:/^[a-zA-Z0-9]+(?:[.-][a-zA-Z0-9]+)*$/'],

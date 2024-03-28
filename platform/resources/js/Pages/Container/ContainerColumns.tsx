@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {Container} from "@/types/container";
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible";
+import {Link, router} from "@inertiajs/react";
 
 
 export const ContainerColumns: ColumnDef<Container>[] = [
@@ -45,13 +46,14 @@ export const ContainerColumns: ColumnDef<Container>[] = [
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
                     Name
-                    {column.getIsSorted() === "asc" ? <ArrowUp className="ml-2 h-4 w-4"/> : <ArrowDown className="ml-2 h-4 w-4"></ArrowDown>}                </Button>
+                    {column.getIsSorted() === "asc" ? <ArrowUp className="ml-2 h-4 w-4"/> :
+                        <ArrowDown className="ml-2 h-4 w-4"></ArrowDown>}                </Button>
             )
         },
         cell: ({row}) => (
             <div>
                 <div>{row.original.name}</div>
-                <div>{row.original.container_id.slice(0, 12)}</div>
+                <div>{row.original.container_id?.slice(0, 12)}</div>
             </div>
         ),
     },
@@ -177,8 +179,30 @@ export const ContainerColumns: ColumnDef<Container>[] = [
         id: "actions",
         enableHiding: false,
         cell: ({row}) => {
-            const payment = row.original
-
+            const container = row.original;
+            const isItemDisabled = (menuItem: string) => {
+                switch (menuItem) {
+                    case "restart":
+                        return !(container.state == "paused" || container.state == "running");
+                    case "create":
+                        return !(container.state == "send" || container.state == "error");
+                    case "start":
+                        return !(container.state == "created" || container.state == "send" || container.state == "exited")
+                    case "stop":
+                        return !(container.state == "running" || container.state == "paused" || container.state == "restarting");
+                    case "kill":
+                        return !(container.state == "created" || container.state == "error" || container.state == "exited");
+                    case "pause":
+                        return !(container.state == "running");
+                    case "unpause":
+                        return !(container.state == "paused");
+                    case "delete":
+                        return false
+                    default:
+                        return false;
+                }
+            };
+            //TODO: Add Icons to actions
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -190,14 +214,46 @@ export const ContainerColumns: ColumnDef<Container>[] = [
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(payment.container_id)}
+                            onClick={() => navigator.clipboard.writeText(container.container_id)}
+                        >
+                            Copy Container ID (Node)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => navigator.clipboard.writeText(String(container.id))}
                         >
                             Copy payment ID
+                            Copy Container ID (Platform)
                         </DropdownMenuItem>
                         <DropdownMenuSeparator/>
-                        <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>View payment details</DropdownMenuItem>
+                        <Link href={"/containers/show/" + container.id}>
+                            <DropdownMenuItem className="cursor-pointer">
+                                View Container
+                            </DropdownMenuItem>
+                        </Link>
+                        <DropdownMenuItem disabled={isItemDisabled("restart")}>Restart Container</DropdownMenuItem>
+                        <DropdownMenuItem disabled={isItemDisabled("recreate")} onClick={
+                            () => {
+                                router.post("/containers/recreate/" + container.id);
+                            }
+                        }>Recreate Container</DropdownMenuItem>
+                        <DropdownMenuItem disabled={isItemDisabled("start")}
+                                          onClick={() => {
+                                              router.post("/containers/start/" + container.id);
+                                          }}
+                        >Start Container</DropdownMenuItem>
+                        <DropdownMenuItem disabled={isItemDisabled("stop")}>Stop Container</DropdownMenuItem>
+                        <DropdownMenuItem disabled={isItemDisabled("kill")}>Kill Container</DropdownMenuItem>
+                        <DropdownMenuItem disabled={isItemDisabled("delete")}>Delete Container</DropdownMenuItem>
+                        <DropdownMenuItem disabled={isItemDisabled("pause")}>Pause Container</DropdownMenuItem>
+                        <DropdownMenuItem disabled={isItemDisabled("unpause")}>Unpause Container</DropdownMenuItem>
+                        <DropdownMenuSeparator/>
+                        <Link href={"/nodes/" + container.node_id}>
+                            <DropdownMenuItem className="cursor-pointer">
+                                View Node
+                            </DropdownMenuItem>
+                        </Link>
                     </DropdownMenuContent>
+
                 </DropdownMenu>
             )
         },

@@ -22,7 +22,7 @@ class ContainerFactory extends Factory
         $image = $this->faker->randomElement(['ubuntu:20.04', 'alpine:latest', 'nginx:1.21']);
         $status = [];
         foreach (ContainerState::cases() as $cs){
-            $status[$cs->name] = $cs->name;
+            $status[$cs->name] = $cs->value;
         }
 
         return [

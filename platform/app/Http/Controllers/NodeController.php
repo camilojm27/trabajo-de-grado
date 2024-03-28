@@ -7,6 +7,7 @@ use App\Models\Node;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,17 +49,19 @@ class NodeController extends Controller
     }
     public function showCredentials(Node $node)
     {
-        // Define las credenciales del nuevo usuario
-        $user = $node->id;
-        $password = Str::password();
-        $tags = 'None';
-        $rmqhost = env('RABBITMQ_HOST', 'localhost');
-        // Define las credenciales del administrador de RabbitMQ
-        $adminUser = env('RABBITMQ_LOGIN', 'guest');
-        $adminPassword = env('RABBITMQ_PASSWORD', 'guest');
+        try {
+            // Define las credenciales del nuevo usuario
+            $user = $node->id;
+            $password = Str::password(32, true, true, false, false);
+            $tags = 'None';
+            $rmqhost = env('RABBITMQ_HOST', 'localhost');
+            // Define las credenciales del administrador de RabbitMQ
+            $adminUser = env('RABBITMQ_LOGIN', 'guest');
+            $adminPassword = env('RABBITMQ_PASSWORD', 'guest');
+            $rmqvhost = env('RABBITMQ_VHOST', '/');
 
-        // Define la URL de la API de RabbitMQ
-        $url = $rmqhost.':15672/api/users/' . $user;
+            // Define la URL de la API de RabbitMQ
+            $url = $rmqhost.':15672/api/users/' . $user;
 
         // Crea el nuevo usuario
         $response = Http::withBasicAuth($adminUser, $adminPassword)
@@ -69,10 +72,10 @@ class NodeController extends Controller
         if ($response->failed()) {
             return response()->json(['error' => 'Error creating user'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
+        $url = $rmqhost.':15672/api/permissions/' . urlencode($rmqvhost) . '/' . $user;
         $response = Http::withBasicAuth($adminUser, $adminPassword)
-            ->put($rmqhost.'15672/api/permissions/%2F/'.$user, [
-                'configure' => '.*',
+            ->put($url, [
+                'configure' => "^{$user}$",
                 'write' => '.*',
                 'read' => '.*'
             ]);
@@ -80,17 +83,22 @@ class NodeController extends Controller
             return response()->json(['error' => 'Error setting permissions'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        elseif ($response->status() == 201 or $response->status() == 204) {
-            $credentials = [
-                'RABBITMQ_HOST' => $rmqhost,
-                'RABBITMQ_PORT' => env('RABBITMQ_PORT', 5672),
-                'RABBITMQ_LOGIN' => $user,
-                'RABBITMQ_PASSWORD' => $password,
-                'RABBITMQ_VHOST' => env('RABBITMQ_VHOST', '/'),
-            ];
+            elseif ($response->status() == 201 or $response->status() == 204) {
+                $credentials = [
+                    'RABBITMQ_HOST' => $rmqhost,
+                    'RABBITMQ_PORT' => env('RABBITMQ_PORT', 5672),
+                    'RABBITMQ_LOGIN' => $user,
+                    'RABBITMQ_PASSWORD' => $password,
+                    'RABBITMQ_VHOST' => $rmqvhost,
+                ];
 
-            return response()->json($credentials, Response::HTTP_OK);
+                return response()->json($credentials, Response::HTTP_OK);
+            }
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            error_log($e->getTraceAsString());
         }
+
 
 
     }
@@ -116,6 +124,7 @@ class NodeController extends Controller
      */
     public function destroy(Node $node)
     {
-        //
+        ///api/users/bulk-delete
+        /// {"users" : ["user1", "user2", "user3"]}
     }
 }

@@ -12,11 +12,13 @@ class Container extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['node_id', 'name', 'image', 'ports', 'node_id', 'status', 'verified', 'container_id', 'attributes'];
+    protected $fillable = ['node_id', 'name', 'image', 'ports', 'node_id', 'state', 'status', 'verified', 'container_id', 'attributes', 'error'];
 
     protected $casts = [
         'attributes' => 'json',
+        'error' => 'json'
     ];
+
     public function node(): BelongsTo
     {
         return $this->belongsTo(Node::class);

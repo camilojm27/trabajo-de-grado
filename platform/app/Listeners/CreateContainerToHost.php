@@ -26,27 +26,15 @@ class CreateContainerToHost
      */
     public function handle(object $event): void
     {
-        $container = new Container($event->container->attributesToArray());
-        $payload = [
-            "action" => "CREATE",
-            "model" => "container",
-            "data" => $container,
-        ];
-        $payload = json_encode($payload);
-        $routing_key = $container->node_id;
-        error_log($payload);
-        Log::info($payload);
-
-
         $connection = new AMQPStreamConnection(
             env('RABBITMQ_HOST'), env('RABBITMQ_PORT', 5672), env('RABBITMQ_LOGIN'), env('RABBITMQ_PASSWORD')
         );
 
         $channel = $connection->channel();
 
-        $channel->queue_declare($routing_key, false, false, false, false);
-        $message = new AMQPMessage($payload);
-        $channel->basic_publish($message, '', $routing_key);
+        $channel->queue_declare($event->routing_key, false, false, false, false);
+        $message = new AMQPMessage($event->payload);
+        $channel->basic_publish($message, '', $event->routing_key);
 
         $channel->close();
         $connection->close();
