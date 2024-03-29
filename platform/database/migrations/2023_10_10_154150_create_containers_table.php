@@ -18,9 +18,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('image');
             $table->timestamp('created')->nullable();
-            $table->string('state')->nullable();    // Docker container state
-            $table->string('status')->nullable();   // success or error
-            $table->json('error')->nullable();
+            $table->string('state')->nullable();
             $table->boolean('verified');
             $table->json('attributes')->nullable();
             $table->timestamps();
