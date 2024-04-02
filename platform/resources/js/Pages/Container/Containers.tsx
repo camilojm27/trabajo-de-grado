@@ -1,10 +1,12 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import {Button} from "@/components/ui/button.jsx";
-import {Link} from "@inertiajs/react";
+import {Link, router} from "@inertiajs/react";
 import {Container} from "@/types/container";
 import {User} from "@/types";
 import DataTable from "@/components/app/DataTable";
 import {ContainerColumns} from "@/Pages/Container/ContainerColumns";
+import {useEffect} from "react";
+
 interface ContainersProps {
     auth: {
         user: User;
@@ -13,8 +15,18 @@ interface ContainersProps {
 }
 
 
-
 export default function Containers({auth, containers}: ContainersProps) {
+    useEffect(() => {
+// @ts-ignore
+        window.Echo.channel('containers')
+            .listen('ContainerProcessed', () => {
+                console.log("evento recibido");
+                router.reload();
+            });
+        console.log("Effect");
+
+    }, []);
+
 
     return (
         <AuthenticatedLayout

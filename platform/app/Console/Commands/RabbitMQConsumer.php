@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\ContainerState;
+use App\Events\ContainerProcessed;
 use App\Models\Container;
 use Exception;
 use Illuminate\Console\Command;
@@ -125,6 +126,8 @@ class RabbitMQConsumer extends Command
                 $this->handleContainerAction($messageData, 'unpaused');
                 break;
         }
+        $this->info('event');
+
     }
 
     private function handleContainerAction(array $messageData, string $actionVerb): void
@@ -159,12 +162,13 @@ class RabbitMQConsumer extends Command
 
     }
 
-    private function handleListContainersAction(array $messageData)
+    private function handleListContainersAction(array $messageData): void
     {
         $this->info(json_encode( $messageData, true) );
         $containers = json_decode($messageData['data'], true);
         $node_id = $messageData['node_id'];
         foreach ($containers as $container) {
+
             $existingContainer = Container::where('container_id', $container["Id"])->first();
             if ($existingContainer !== null) {
                 // Update existing record
@@ -187,6 +191,7 @@ class RabbitMQConsumer extends Command
 
                 $newContainer->save();
             }
+            ContainerProcessed::dispatch();
         }
     }
 }

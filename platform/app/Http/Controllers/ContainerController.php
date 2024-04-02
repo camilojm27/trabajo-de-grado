@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ContainerState;
+use App\Events\ContainerProcessed;
 use App\Events\SendCreateContainer;
 use App\Models\Container;
 use App\Models\Node;
@@ -58,6 +59,7 @@ class ContainerController extends Controller
         $container->state = "send";
         $container->verified = False;
         $container->save();
+        ContainerProcessed::dispatch();
         try {
             SendCreateContainer::dispatch([
                 "pid" => $container->id,
