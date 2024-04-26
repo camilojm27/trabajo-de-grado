@@ -127,4 +127,9 @@ class NodeController extends Controller
         ///api/users/bulk-delete
         /// {"users" : ["user1", "user2", "user3"]}
     }
+
+    public function exist()
+    {
+        
+    }
 }

@@ -32,6 +32,7 @@ class ContainerFactory extends Factory
             'image' => $image,
             'created' => $this->faker->dateTimeThisYear(),
             'state' => $this->faker->randomElement($status),
+            'status' => $this->faker->randomElement(['Up 2 minutes', 'Exited (0) 5 minutes ago', 'Up 1 hour']),
             'verified' => false,
             'attributes' => [
                 'Id' => $this->faker->sha256,

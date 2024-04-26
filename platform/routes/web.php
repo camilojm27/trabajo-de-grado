@@ -23,8 +23,19 @@ Route::post('/containers/store', [ContainerController::class, 'store'])->middlew
 Route::get('/containers/show/{container}', [ContainerController::class, 'show'])->middleware(['auth', 'verified'])->name('containers.show');;
 Route::get('/containers/{node}', [ContainerController::class, 'showNode'])->middleware(['auth', 'verified'])->name('containers.node');
 
-Route::post('/containers/start/{container}', [ContainerController::class, 'start'])->middleware(['auth', 'verified'])->name('containers.store');
-Route::post('/containers/recreate/{container}', [ContainerController::class, 'recreate'])->middleware(['auth', 'verified'])->name('containers.store');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/containers/recreate/{container}', [ContainerController::class, 'recreate']);
+    Route::post('/containers/restart/{container}', [ContainerController::class, 'restart']);
+    Route::post('/containers/start/{container}', [ContainerController::class, 'start']);
+    Route::post('/containers/stop/{container}', [ContainerController::class, 'stop']);
+    Route::post('/containers/kill/{container}', [ContainerController::class, 'kill']);
+    Route::post('/containers/pause/{container}', [ContainerController::class, 'pause']);
+    Route::post('/containers/unpause/{container}', [ContainerController::class, 'unpause']);
+    Route::post('/containers/delete/{container}', [ContainerController::class, 'destroy']);
+});
+
+
 
 Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified'])->name('dashboard');
 

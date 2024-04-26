@@ -16,7 +16,8 @@ interface Props {
 }
 
 export default function NodeDetail({auth, node}: Props) {
-    const {attributes} = node
+    // @ts-ignore
+    const attributes = JSON.parse(node.attributes)
 
     return (
         <AuthenticatedLayout

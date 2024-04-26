@@ -89,6 +89,8 @@ func (c *RabbitMQClient) Consume(ctx context.Context, queueName string, handler 
 func (c *RabbitMQClient) Publish(ctx context.Context, body []byte) error {
 	// Check if channel is open before using it
 	if c.ch.IsClosed() {
+		//TODO: What to do if the channel is closed?,
+		//this can happen if the username is deleted from the RabbitMQ management console
 		return fmt.Errorf("failed to publish message: channel closed")
 	}
 

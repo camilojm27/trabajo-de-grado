@@ -8,6 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/strslice"
+
 	t "github.com/camilojm27/trabajo-de-grado/pgc/types"
 
 	"github.com/docker/docker/api/types"
@@ -23,11 +26,17 @@ func Create(ctx context.Context, containerData t.ContainerRequest) (types.Contai
 
 	envVariables := make([]string, len(containerData.Data.Attributes.Env))
 	for i, env := range containerData.Data.Attributes.Env {
-		envVariables[i] = env.Name + "=" + env.Value
+		if env.Name != "" || env.Value != "" {
+			envVariables[i] = env.Name + "=" + env.Value
+		}
+	}
+
+	if len(envVariables) == 1 && envVariables[0] == "" {
+		envVariables = nil
 	}
 	// volumes := containerData.Data.Attributes.Volumes
-	// clearVolumens(&volumes)
-	ports := formatPorts(containerData.Data.Attributes.Ports)
+	//// clearVolumens(&volumes)
+	// ports := formatPorts(containerData.Data.Attributes.Ports)
 	println(containerData.Data.Attributes.Volumes)
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -37,7 +46,7 @@ func Create(ctx context.Context, containerData t.ContainerRequest) (types.Contai
 
 	if _, _, err := cli.ImageInspectWithRaw(ctx, imageName); err != nil {
 		fmt.Printf("Image %s not found locally. Pulling from Docker Hub...\n", imageName)
-		out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+		out, err := cli.ImagePull(ctx, imageName, image.PullOptions{})
 		if err != nil {
 			return types.ContainerJSON{}, err
 		}
@@ -48,10 +57,11 @@ func Create(ctx context.Context, containerData t.ContainerRequest) (types.Contai
 	config := &container.Config{
 		Image: imageName,
 		Env:   envVariables,
+		Cmd:   strslice.StrSlice{containerData.Data.Attributes.Cmd},
 	}
 	hostConfig := &container.HostConfig{
 		// Binds:        volumes,
-		PortBindings: ports,
+		// PortBindings: ports,
 	}
 
 	resp, err := cli.ContainerCreate(
@@ -97,10 +107,10 @@ func Create(ctx context.Context, containerData t.ContainerRequest) (types.Contai
 
 // }
 
-func Delete(ctx context.Context, containerID string) (bool, error) {
+func Delete(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
 	}
 
 	defer cli.Close()
@@ -112,10 +122,10 @@ func Delete(ctx context.Context, containerID string) (bool, error) {
 	if err := cli.ContainerRemove(ctx, containerID, container.RemoveOptions{
 		Force: true,
 	}); err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
 	}
 
-	return true, err
+	return types.ContainerJSON{}, err
 
 }
 
@@ -136,96 +146,113 @@ func Inspect(ctx context.Context, containerID string) (types.ContainerJSON, erro
 
 }
 
-func Start(ctx context.Context, containerID string) (bool, error) {
+func Start(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
 	}
 
 	defer cli.Close()
 
 	if err := cli.ContainerStart(ctx, containerID, container.StartOptions{}); err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
 	}
 
-	return true, nil
+	inspect, _ := Inspect(ctx, containerID)
 
+	return inspect, err
 }
 
-func Stop(ctx context.Context, containerID string, timeout int) (bool, error) {
+func Stop(ctx context.Context, containerID string, timeout int) (types.ContainerJSON, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
 	}
 
 	defer cli.Close()
 
 	if err := cli.ContainerStop(ctx, containerID, container.StopOptions{}); err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
 	}
 
-	return true, nil
+	inspect, _ := Inspect(ctx, containerID)
+
+	return inspect, err
 }
 
-func Restart(ctx context.Context, containerID string, timeout int) (bool, error) {
+func Restart(ctx context.Context, containerID string, timeout int) (types.ContainerJSON, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
 	}
 
 	defer cli.Close()
 
 	if err := cli.ContainerRestart(ctx, containerID, container.StopOptions{}); err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
 	}
 
-	return true, nil
+	inspect, _ := Inspect(ctx, containerID)
+
+	return inspect, err
 }
 
-func Pause(ctx context.Context, containerID string) (bool, error) {
+func Pause(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
 	}
 
 	defer cli.Close()
 
 	if err := cli.ContainerPause(ctx, containerID); err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
+
 	}
 
-	return true, nil
+	inspect, _ := Inspect(ctx, containerID)
+
+	return inspect, err
+
 }
 
-func Kill(ctx context.Context, containerID string) (bool, error) {
+func Kill(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
+
 	}
 
 	defer cli.Close()
 
 	if err := cli.ContainerKill(ctx, containerID, "SIGKILL"); err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
+
 	}
 
-	return true, nil
+	inspect, _ := Inspect(ctx, containerID)
 
+	return inspect, err
 }
 
-func Unpause(ctx context.Context, containerID string) (bool, error) {
+func Unpause(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
+
 	}
 
 	defer cli.Close()
 
 	if err := cli.ContainerUnpause(ctx, containerID); err != nil {
-		return false, err
+		return types.ContainerJSON{}, err
+
 	}
 
-	return true, nil
+	inspect, _ := Inspect(ctx, containerID)
+
+	return inspect, err
+
 }
 
 func ListContainers(ctx context.Context) ([]types.Container, error) {
@@ -260,7 +287,7 @@ func SendContainersListBasedOnEventsAndTime(rmqClient *RabbitMQClient, ctx conte
 		),
 	})
 
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	fmt.Println("Listening to Docker events and sending container list every minute...")
@@ -275,7 +302,7 @@ func SendContainersListBasedOnEventsAndTime(rmqClient *RabbitMQClient, ctx conte
 			sendContainers(ctx, rmqClient)
 
 		case event := <-eventChan:
-			if eventChan != nil { // Check if event channel is initialized (optional)
+			if eventChan != nil {
 				currentTimestamp := time.Now()
 				if currentTimestamp.Sub(lastEvent) > shortPeriod {
 					fmt.Printf("Received event: %v\n", event.Action)
@@ -284,7 +311,7 @@ func SendContainersListBasedOnEventsAndTime(rmqClient *RabbitMQClient, ctx conte
 				}
 			}
 		case err := <-errChan:
-			if errChan != nil { // Check if error channel is initialized (optional)
+			if errChan != nil {
 				log.Printf("Error receiving event: %v\n", err)
 			}
 		}

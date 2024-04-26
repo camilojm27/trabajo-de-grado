@@ -9,8 +9,9 @@ type ContainerRequest struct {
 		NodeID      string `json:"node_id"`
 		ContainerID string `json:"container_id"`
 		Attributes  struct {
-			Ports []string `json:"ports"`
-			Env   []struct {
+			Cmd string `json:"cmd"`
+			// Ports []struct{} `json:"ports"`
+			Env []struct {
 				Name  string `json:"name"`
 				Value string `json:"value"`
 			} `json:"env"`

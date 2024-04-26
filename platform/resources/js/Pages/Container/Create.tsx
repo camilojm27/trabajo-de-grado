@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import {Head, Link, usePage} from '@inertiajs/react';
+import {Head, Link} from '@inertiajs/react';
 import {Button} from "@/components/ui/button"
 import {
     Form,
@@ -33,15 +33,6 @@ import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {router} from '@inertiajs/react'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger
-} from "@/components/ui/dialog";
 import { Label } from '@radix-ui/react-dropdown-menu';
 import { Trash2 } from 'lucide-react';
 import { User } from '@/types';
@@ -94,18 +85,19 @@ const items = [
         node: z.string().uuid(),
         name: z.string().min(3).max(100),
         image: z.string().min(3).max(100),
+        cmd: z.string().min(0).max(1000),
         ports: z
             .array(
                 z
-                    .string()
+                    .string().min(0)
                     .regex(
-                        /^(?:(?:\d{1,5}|(?:\d{1,3}\.){3}\d{1,3}):)?(\d{1,5})(?::(\d{1,5}))?(?:\/(tcp|udp|sctp))?$/
+                        /^(?:(?:\d{0,5}|(?:\d{0,3}\.){3}\d{0,3}):)?(\d{0,5})(?::(\d{0,5}))?(?:\/(tcp|udp|sctp))?$/
                     )
             )
             .min(0),
         env: z
             .array(
-                z.object({ name: z.string().min(1), value: z.string().min(1) })
+                z.object({ name: z.string().min(0), value: z.string().min(0) })
             )
             .min(0),
         volumes: z.array(z.string().min(0)).min(0),
@@ -120,11 +112,12 @@ const items = [
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            node: "9b5acc36-e6a5-4ab2-81f4-9edca73a165b",
-            name: "Hola Mundo",
-            image: "ubuntu:24.04",
+            node: "",
+            name: "",
+            image: "",
+            cmd: "",
             ports: [],
-            env: [{ name: "holapp", value: "mundoo" }],
+            env: [{ name: "", value: "" }],
             volumes: [],
             advanced_bools: ["detach"],
         },
@@ -139,6 +132,7 @@ const items = [
             name: data.name,
             image: data.image,
             attributes: {
+                cmd: data.cmd,
                 ports: data.ports,
                 env: data.env,
                 volumes: data.volumes,
@@ -179,6 +173,14 @@ const items = [
     if (volumsFields.fields.length === 0) {
         // @ts-ignore
         volumsFields.append("");
+    }
+    if (portFields.fields.length === 0) {
+        // @ts-ignore
+        portFields.append("");
+    }
+    if (envFields.fields.length === 0) {
+        // @ts-ignore
+        envFields.append("");
     }
 
     // @ts-ignore
@@ -304,27 +306,43 @@ const items = [
                                                 </FormItem>
                                             )}
                                         />
-                                        <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    className="mt-4 mr-2"
-                                                >
-                                                    Variables de entorno
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[725px] ">
-                                                <DialogHeader>
-                                                    <DialogTitle>
-                                                        Agregar Variables de
-                                                        entorno
-                                                    </DialogTitle>
-                                                    <DialogDescription>
-                                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Dicta architecto officiis, quaerat quas veniam alias vel!
-                                                    </DialogDescription>
-                                                </DialogHeader>
+                                        <FormField
+                                            control={form.control}
+                                            name="cmd"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>
+                                                        Comando
+                                                    </FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            placeholder="tail -f /dev/null"
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
+                                                    {errors.name && (
+                                                        <div className="text-red-600">
+                                                            {
+                                                                errors.name
+                                                                    .message
+                                                            }
+                                                        </div>
+                                                    )}
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <br/>
+                                        <FormItem>
+                                            <FormLabel>
+                                                Variables de Entorno
+                                                {/*<FormDescription>*/}
+                                                {/*    Agregar Variables de*/}
+                                                {/*    entorno*/}
+                                                {/*</FormDescription>*/}
+                                                <br/>
 
-                                                {envFields.fields.map(
+                                            </FormLabel>
+                                            {envFields.fields.map(
                                                     (field, index) => (
                                                         <div
                                                             key={field.id}
@@ -337,6 +355,7 @@ const items = [
                                                                     {...register(
                                                                         `env.${index}.name`
                                                                     )}
+                                                                    placeholder="NOMBRE_VARIABLE"
                                                                 />
                                                             </Label>
                                                             <Label className=" w-full">
@@ -346,6 +365,7 @@ const items = [
                                                                     {...register(
                                                                         `env.${index}.value`
                                                                     )}
+                                                                    placeholder="VALOR_VAR"
                                                                 />
                                                             </Label>
                                                             {envFields.fields
@@ -380,25 +400,15 @@ const items = [
                                                 Save changes
                                             </Button>
                                         </DialogFooter> */}
-                                            </DialogContent>
-                                        </Dialog>
-                                        <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Button variant="outline">
-                                                    Puertos
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[725px] ">
-                                                <DialogHeader>
-                                                    <DialogTitle>
-                                                        Agregar Puertos
-                                                    </DialogTitle>
-                                                    <DialogDescription>
-                                                        Make changes to your
-                                                        profile here. Click save
-                                                        when you're done.
-                                                    </DialogDescription>
-                                                </DialogHeader>
+                                        </FormItem>
+                                        <FormItem>
+                                            <FormLabel>
+                                                Puertos
+                                                <FormDescription>
+                                                    Agrega los volumenes que
+                                                    necesitará el contenedor.
+                                                </FormDescription>
+                                            </FormLabel>
 
                                                 {portFields.fields.map(
                                                     (field, index) => (
@@ -407,7 +417,6 @@ const items = [
                                                             className="flex space-x-4 items-center"
                                                         >
                                                             <Label className="w-full">
-                                                                Port String:
                                                                 <Input
                                                                     type="text"
                                                                     {...register(
@@ -421,6 +430,7 @@ const items = [
                                                                 .length > 1 && (
                                                                 <Button
                                                                     type="button"
+                                                                    variant="secondary"
                                                                     onClick={() =>
                                                                         portFields.remove(
                                                                             index
@@ -430,26 +440,22 @@ const items = [
                                                                     <Trash2 />
                                                                 </Button>
                                                             )}
+                                                            <Button
+                                                                type="button"
+                                                                variant="secondary"
+                                                                onClick={() =>
+                                                                    // @ts-ignore
+                                                                    portFields.append("")
+                                                                }
+                                                            >
+                                                                {" "}
+                                                                Agregar nueva variable
+                                                            </Button>
                                                         </div>
                                                     )
                                                 )}
-                                                <Button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        // @ts-ignore
-                                                        portFields.append("")
-                                                    }
-                                                >
-                                                    {" "}
-                                                    Agregar nueva variable
-                                                </Button>
-                                                <DialogFooter>
-                                                    <Button type="submit">
-                                                        Save changes
-                                                    </Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
+
+                                        </FormItem>
 
                                         <FormItem>
                                             <FormLabel>

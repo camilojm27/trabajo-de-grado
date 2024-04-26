@@ -27,7 +27,7 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 	ctx := context.Background()
 	ctxTime := context.Background()
 
-	services.SendContainersListBasedOnEventsAndTime(client, ctxTime)
+	go services.SendContainersListBasedOnEventsAndTime(client, ctxTime)
 
 	handler := func(d amqp091.Delivery) {
 		var message types.ContainerRequest

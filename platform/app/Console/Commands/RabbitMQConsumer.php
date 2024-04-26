@@ -5,8 +5,10 @@ namespace App\Console\Commands;
 use App\Enums\ContainerState;
 use App\Events\ContainerProcessed;
 use App\Models\Container;
+use App\Models\Node;
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 use PhpAmqpLib\Channel\AbstractChannel;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -76,6 +78,14 @@ class RabbitMQConsumer extends Command
     private function processMessage($message): void
     {
         $messageData = $this->parseMessage($message);
+        try {
+            Node::findOrFail($messageData['node_id']);
+
+        } catch (Exception $e) {
+            $this->warn('Node not found: ' . $messageData['node_id']);
+            //TODO: Delete the node from rabbitmq
+            return;
+        }
         $this->dispatchAction($messageData['action'], $messageData);
     }
 
@@ -126,7 +136,7 @@ class RabbitMQConsumer extends Command
                 $this->handleContainerAction($messageData, 'unpaused');
                 break;
         }
-        $this->info('event');
+        $this->info('done');
 
     }
 
@@ -140,16 +150,14 @@ class RabbitMQConsumer extends Command
             if ($actionVerb === 'deleted') {
                 $container->delete();
             } else {
-                $container->status = ContainerState::SUCCESS;
                 $container->state = $messageData["data"]["State"]["Status"];
-                $container->error = null;
+                //$container->error = null;
                 $container->attributes = $messageData['data'];
                 $container->verified = true;
-                $container->save();
+                $container->update();
             }
 
 
-            $this->info('Container ' . $actionVerb . ', action ' . $messageData['action']);
         }
     }
 
@@ -164,15 +172,19 @@ class RabbitMQConsumer extends Command
 
     private function handleListContainersAction(array $messageData): void
     {
-        $this->info(json_encode( $messageData, true) );
+        //$this->info(json_encode( $messageData, true) );
         $containers = json_decode($messageData['data'], true);
         $node_id = $messageData['node_id'];
+        $containers_to_delete = array_map(function($item) {
+            return $item['Id'];
+        }, $containers);
+        Container::whereNotIn('container_id', $containers_to_delete)->where('node_id', $node_id)->delete();
         foreach ($containers as $container) {
-
             $existingContainer = Container::where('container_id', $container["Id"])->first();
             if ($existingContainer !== null) {
                 // Update existing record
-                $existingContainer->state = $container["Status"];
+                $existingContainer->status = $container["Status"];
+                $existingContainer->state = $container["State"];
                 $existingContainer->name = $container["Names"][0];
                 $existingContainer->verified = true;
                 $existingContainer->attributes = $container;
@@ -184,14 +196,17 @@ class RabbitMQConsumer extends Command
                 $newContainer->name = $container["Names"][0];
                 $newContainer->image = $container['Image'];
                 $newContainer->node_id = $node_id;
+                $newContainer->status = $container["Status"];
                 $newContainer->state = $container["State"];
                 $newContainer->verified = true;
                 $newContainer->attributes = $container;
+                $newContainer->created = Carbon::createFromTimestamp($container["Created"]);
                 error_log('New container created: ' . $container["Id"] . ' on node: ' . $node_id);
 
                 $newContainer->save();
             }
-            ContainerProcessed::dispatch();
         }
+        ContainerProcessed::dispatch();
+
     }
 }

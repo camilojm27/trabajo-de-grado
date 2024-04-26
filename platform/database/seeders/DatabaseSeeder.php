@@ -13,15 +13,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this::call(ConfigSeeder::class);
-        // \App\Models\User::factory(10)->create();
-//        \App\Models\Node::factory(1)->create();
-//        \App\Models\Container::factory(10)->create();
-
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => '$2y$10$Nm9dx7/kUdmfwhDtQOmR/..tWUmMoBArFL4wjU2KUJip4vxnlUNsm' //12345678
         ]);
+
+        $this::call(ConfigSeeder::class);
+//         \App\Models\User::factory(10)->create();
+//        \App\Models\Node::factory(1)->create();
+//        \App\Models\Container::factory(20)->create();
+
     }
 }

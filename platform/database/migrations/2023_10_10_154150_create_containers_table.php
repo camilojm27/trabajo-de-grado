@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('image');
             $table->timestamp('created')->nullable();
             $table->string('state')->nullable();
+            $table->string('status')->nullable();
+            $table->string('error')->nullable();
             $table->boolean('verified');
             $table->json('attributes')->nullable();
             $table->timestamps();
