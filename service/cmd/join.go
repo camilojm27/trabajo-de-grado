@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/camilojm27/trabajo-de-grado/pgc/pkg/join"
+	"github.com/camilojm27/trabajo-de-grado/service/pkg/join"
 	"log"
 	"net/url"
 

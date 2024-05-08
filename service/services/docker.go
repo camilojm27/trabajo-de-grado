@@ -11,7 +11,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/strslice"
 
-	t "github.com/camilojm27/trabajo-de-grado/pgc/types"
+	t "github.com/camilojm27/trabajo-de-grado/service/types"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"

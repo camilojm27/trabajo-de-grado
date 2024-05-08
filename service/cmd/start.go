@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/camilojm27/trabajo-de-grado/pgc/pkg/start"
+	"github.com/camilojm27/trabajo-de-grado/service/pkg/start"
 	"log"
 
 	"github.com/spf13/cobra"

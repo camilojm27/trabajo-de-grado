@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/camilojm27/trabajo-de-grado/pgc/services"
+	"github.com/camilojm27/trabajo-de-grado/service/services"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

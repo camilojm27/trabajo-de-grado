@@ -3,7 +3,7 @@ package services
 import (
 	"encoding/json"
 
-	"github.com/camilojm27/trabajo-de-grado/pgc/types"
+	"github.com/camilojm27/trabajo-de-grado/service/types"
 )
 
 var info = types.SystemInfo{
