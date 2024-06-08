@@ -1,12 +1,14 @@
 import {Link} from '@inertiajs/react'
 import {Separator} from "@/components/ui/separator.jsx"
 import {CardTitle, CardHeader, CardContent, Card, CardFooter} from "@/components/ui/card.jsx"
-import {Button} from "@/components/ui/button.jsx"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import { User } from "@/types";
 import { Node } from "@/types/node";
-import { ClassAttributes, HTMLAttributes, SVGProps} from 'react'
+import {SVGProps, useEffect, useRef, useState} from 'react'
 import {JSX} from 'react/jsx-runtime'
+import CpuUsage from "@/components/app/CpuUsage";
+import RamUsage from "@/components/app/RamUsage";
+import NetUsage from "@/components/app/NetUsage";
 
 interface Props {
     auth: {
@@ -18,7 +20,27 @@ interface Props {
 export default function NodeDetail({auth, node}: Props) {
     // @ts-ignore
     const attributes = JSON.parse(node.attributes)
+    const container_id = "1";
+    const chartRef = useRef(null);
+    const [cpuUsage, setCpuUsage] = useState(0);
+    const [ramData, setRamData] = useState({});
+    const [netData, setNetData] = useState(null);
 
+    useEffect(() => {
+        // @ts-ignore
+        window.Echo.private(`container-metrics${container_id}`)
+            .listen('SystemMetricsUpdated', (data: any) => {
+                console.table(data.metrics)
+                setCpuUsage(data.metrics.cpu_usage)
+                setRamData(data.metrics)
+                setNetData(data.metrics.NetIO[0])
+            });
+
+        return () => {
+            // @ts-ignore
+            window.Echo.leave(`container-metrics${container_id}`);
+        };
+    }, [cpuUsage, ramData, netData]);
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -146,39 +168,35 @@ export default function NodeDetail({auth, node}: Props) {
                                 <div className="flex items-center">
                                     <div>Arch</div>
                                     <div
-                                        className="font-semibold ml-auto">{attributes.os.arch[0]} {attributes.os.arch[1]}</div>
+                                        className="font-semibold ml-auto">{attributes.os.arch}</div>
                                 </div>
                             </CardContent>
                         </Card>
                         <Card className="relative overflow-hidden">
                             <CardHeader className="flex flex-row items-center border-b">
-                                <CardTitle>Network Statistics</CardTitle>
+                                <CardTitle>RAM Usage</CardTitle>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <CurvedlineChart className="w-full aspect-[4/3]"/>
+                                <RamUsage data={ramData}/>
                             </CardContent>
                         </Card>
                         <Card className="relative overflow-hidden">
                             <CardHeader className="flex flex-row items-center border-b">
-                                <CardTitle>Resource Usage</CardTitle>
+                                <CardTitle>CPU Load</CardTitle>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <BarChart className="w-full aspect-[4/3]"/>
+                                <CpuUsage cpuUsage={cpuUsage}/>
                             </CardContent>
                         </Card>
                         <Card className="relative overflow-hidden">
                             <CardHeader className="flex flex-row items-center border-b">
-                                <CardTitle>Logs</CardTitle>
+                                <CardTitle>Networks</CardTitle>
                             </CardHeader>
+                            <CardContent className="p-0">
+                                <NetUsage data={netData}/>
+                            </CardContent>
                             <CardFooter
                                 className="pb-4 px-6 justify-center bg-gradient-to-b from-background/50 to-background absolute inset-x-0 bottom-0">
-                                <Button
-                                    className="gap-2 rounded-full bg-white dark:bg-gray-950"
-                                    size="sm"
-                                    variant="outline">
-                                    View Logs
-                                    <Maximize2Icon className="w-4 h-4"/>
-                                </Button>
                             </CardFooter>
                         </Card>
                     </div>
@@ -210,199 +228,6 @@ function ServerIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
     );
 }
 
-
-function CurvedlineChart(props: JSX.IntrinsicAttributes & ClassAttributes<HTMLDivElement> & HTMLAttributes<HTMLDivElement>) {
-    return (
-        (<div {...props}>
-            {/*<ResponsiveLine*/}
-            {/*    data={[*/}
-            {/*        {*/}
-            {/*            id: "B",*/}
-            {/*            data: [*/}
-            {/*                {x: "2018-01-01", y: 7},*/}
-            {/*                {x: "2018-01-02", y: 5},*/}
-            {/*                {x: "2018-01-03", y: 11},*/}
-            {/*                {x: "2018-01-04", y: 9},*/}
-            {/*                {x: "2018-01-05", y: 12},*/}
-            {/*                {x: "2018-01-06", y: 16},*/}
-            {/*                {x: "2018-01-07", y: 13},*/}
-            {/*                {x: "2018-01-08", y: 13},*/}
-            {/*            ],*/}
-            {/*        },*/}
-            {/*        {*/}
-            {/*            id: "A",*/}
-            {/*            data: [*/}
-            {/*                {x: "2018-01-01", y: 9},*/}
-            {/*                {x: "2018-01-02", y: 8},*/}
-            {/*                {x: "2018-01-03", y: 13},*/}
-            {/*                {x: "2018-01-04", y: 6},*/}
-            {/*                {x: "2018-01-05", y: 8},*/}
-            {/*                {x: "2018-01-06", y: 14},*/}
-            {/*                {x: "2018-01-07", y: 11},*/}
-            {/*                {x: "2018-01-08", y: 12},*/}
-            {/*            ],*/}
-            {/*        },*/}
-            {/*    ]}*/}
-            {/*    enableCrosshair={false}*/}
-            {/*    margin={{top: 50, right: 110, bottom: 50, left: 60}}*/}
-            {/*    xScale={{*/}
-            {/*        type: "time",*/}
-            {/*        format: "%Y-%m-%d",*/}
-            {/*        useUTC: false,*/}
-            {/*        precision: "day",*/}
-            {/*    }}*/}
-            {/*    xFormat="time:%Y-%m-%d"*/}
-            {/*    yScale={{*/}
-            {/*        type: "linear",*/}
-            {/*        min: 0,*/}
-            {/*        max: "auto",*/}
-            {/*    }}*/}
-            {/*    axisTop={null}*/}
-            {/*    axisRight={null}*/}
-            {/*    axisBottom={{*/}
-            {/*        tickSize: 5,*/}
-            {/*        tickPadding: 5,*/}
-            {/*        tickRotation: 0,*/}
-            {/*        legend: "X",*/}
-            {/*        legendOffset: 45,*/}
-            {/*        legendPosition: "middle",*/}
-            {/*        format: "%b %d",*/}
-            {/*        tickValues: "every 1 day",*/}
-            {/*    }}*/}
-            {/*    axisLeft={{*/}
-            {/*        tickSize: 5,*/}
-            {/*        tickPadding: 5,*/}
-            {/*        tickRotation: 0,*/}
-            {/*        legend: "Y",*/}
-            {/*        legendOffset: -45,*/}
-            {/*        legendPosition: "middle",*/}
-            {/*    }}*/}
-            {/*    colors={{scheme: "paired"}}*/}
-            {/*    pointSize={5}*/}
-            {/*    pointColor={{*/}
-            {/*        from: "color",*/}
-            {/*        modifiers: [["darker", 0.2]],*/}
-            {/*    }}*/}
-            {/*    pointBorderWidth={2}*/}
-            {/*    pointBorderColor={{*/}
-            {/*        from: "color",*/}
-            {/*        modifiers: [["darker", 0.2]],*/}
-            {/*    }}*/}
-            {/*    pointLabelYOffset={-12}*/}
-            {/*    useMesh={true}*/}
-            {/*    curve="monotoneX"*/}
-            {/*    legends={[*/}
-            {/*        {*/}
-            {/*            anchor: "bottom-right",*/}
-            {/*            direction: "column",*/}
-            {/*            justify: false,*/}
-            {/*            translateX: 100,*/}
-            {/*            translateY: 0,*/}
-            {/*            itemsSpacing: 0,*/}
-            {/*            itemDirection: "left-to-right",*/}
-            {/*            itemWidth: 80,*/}
-            {/*            itemHeight: 20,*/}
-            {/*            symbolSize: 14,*/}
-            {/*            symbolShape: "circle",*/}
-            {/*        },*/}
-            {/*    ]}*/}
-            {/*    theme={{*/}
-            {/*        tooltip: {*/}
-            {/*            container: {*/}
-            {/*                fontSize: "12px",*/}
-            {/*            },*/}
-            {/*        },*/}
-            {/*    }}*/}
-            {/*    role="application"/>*/}
-        </div>)
-    );
-}
-
-
-function BarChart(props: JSX.IntrinsicAttributes & ClassAttributes<HTMLDivElement> & HTMLAttributes<HTMLDivElement>) {
-    return (
-        (<div {...props}>
-            {/*<ResponsiveBar*/}
-            {/*    data={[*/}
-            {/*        {*/}
-            {/*            name: "A",*/}
-            {/*            data: 111,*/}
-            {/*        },*/}
-            {/*        {*/}
-            {/*            name: "B",*/}
-            {/*            data: 157,*/}
-            {/*        },*/}
-            {/*        {*/}
-            {/*            name: "C",*/}
-            {/*            data: 129,*/}
-            {/*        },*/}
-            {/*        {*/}
-            {/*            name: "D",*/}
-            {/*            data: 187,*/}
-            {/*        },*/}
-            {/*        {*/}
-            {/*            name: "E",*/}
-            {/*            data: 119,*/}
-            {/*        },*/}
-            {/*        {*/}
-            {/*            name: "F",*/}
-            {/*            data: 22,*/}
-            {/*        },*/}
-            {/*        {*/}
-            {/*            name: "G",*/}
-            {/*            data: 101,*/}
-            {/*        },*/}
-            {/*        {*/}
-            {/*            name: "H",*/}
-            {/*            data: 83,*/}
-            {/*        },*/}
-            {/*    ]}*/}
-            {/*    keys={["data"]}*/}
-            {/*    indexBy="name"*/}
-            {/*    margin={{top: 50, right: 50, bottom: 50, left: 60}}*/}
-            {/*    padding={0.3}*/}
-            {/*    valueScale={{type: "linear"}}*/}
-            {/*    indexScale={{type: "band", round: true}}*/}
-            {/*    colors={{scheme: "paired"}}*/}
-            {/*    borderWidth={1}*/}
-            {/*    borderColor={{*/}
-            {/*        from: "color",*/}
-            {/*        modifiers: [["darker", 0.2]],*/}
-            {/*    }}*/}
-            {/*    axisTop={null}*/}
-            {/*    axisRight={null}*/}
-            {/*    axisBottom={{*/}
-            {/*        tickSize: 5,*/}
-            {/*        tickPadding: 5,*/}
-            {/*        tickRotation: 0,*/}
-            {/*        legend: "Name",*/}
-            {/*        legendPosition: "middle",*/}
-            {/*        legendOffset: 45,*/}
-            {/*        truncateTickAt: 0,*/}
-            {/*    }}*/}
-            {/*    axisLeft={{*/}
-            {/*        tickSize: 5,*/}
-            {/*        tickPadding: 5,*/}
-            {/*        tickRotation: 0,*/}
-            {/*        legend: "Number",*/}
-            {/*        legendPosition: "middle",*/}
-            {/*        legendOffset: -45,*/}
-            {/*        truncateTickAt: 0,*/}
-            {/*    }}*/}
-            {/*    theme={{*/}
-            {/*        tooltip: {*/}
-            {/*            container: {*/}
-            {/*                fontSize: "12px",*/}
-            {/*            },*/}
-            {/*        },*/}
-            {/*    }}*/}
-            {/*    labelSkipWidth={12}*/}
-            {/*    labelSkipHeight={12}*/}
-            {/*    role="application"*/}
-            {/*    ariaLabel="A bar chart showing data"/>*/}
-        </div>)
-    );
-}
 
 
 function Maximize2Icon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {

@@ -16,7 +16,7 @@ interface OSAttributes {
     name: string;
     fullname: string;
     based_on: string;
-    arch: string[];
+    arch: string;
 }
 
 interface SoftwareAttributes {

@@ -16,3 +16,9 @@ Route::get('nodes/credentials/{node}', [NodeController::class, 'showCredentials'
 
 Route::get('ping', [UtilsController::class, 'ping']);
 
+Route::post('/metrics', function (Request $request) {
+    $metrics = $request->all();
+    event(new \App\Events\SystemMetricsUpdated($metrics));
+
+    return response()->json(['message' => 'Metrics received and broadcasted.'])->status(200);
+});

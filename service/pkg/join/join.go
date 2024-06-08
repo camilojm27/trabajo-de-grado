@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/camilojm27/trabajo-de-grado/service/services/system"
 	"io"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/camilojm27/trabajo-de-grado/service/services"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -30,7 +30,7 @@ func RunJoinCommand(cmd *cobra.Command, args []string, apiEndpoint string, welco
 	payload := payloadType{
 		WelcomeKey: welcomeKey,
 		Hostname:   hostname,
-		Attributes: services.Data,
+		Attributes: system.Data,
 	}
 
 	jsonPayload, err := json.Marshal(payload)

@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"github.com/camilojm27/trabajo-de-grado/service/pkg/start"
+	"io"
 	"log"
 
+	"github.com/camilojm27/trabajo-de-grado/service/pkg/start"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,7 +29,19 @@ var startCmd = &cobra.Command{
 		if nodeID == "" || rabbitmqHost == "" || rabbitmqPort == "" || rabbitmqLogin == "" || rabbitmqPassword == "" {
 			log.Fatal("Rabbitmq Configuration is missing, run 'pgc join' to set configuration")
 		}
+
 		start.RunStartCommand(cmd, args)
+
+		// cli, _ := client.NewClientWithOpts(client.FromEnv)
+
+		// defer cli.Close()
+		// stats, _ := cli.ContainerStats(context.Background(), "some-postgres", false)
+		// fmt.Println(stats)
+		// fmt.Println(stats.OSType)
+		// r, _ := stats.Body.Read()
+		// //rr, _ := io.ReadAll()
+		// fmt.Println(string())
+
 	},
 }
 
@@ -45,4 +58,12 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// startCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func readWithReadAll(reader io.ReadCloser) ([]byte, error) {
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
