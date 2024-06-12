@@ -37,15 +37,17 @@ type Hardware struct {
 }
 
 type Software struct {
-	Python   string `json:"python"`
-	Docker   string `json:"docker"`
-	Php      string `json:"php"`
-	Composer string `json:"composer"`
-	Node     string `json:"node"`
-	Npm      string `json:"npmjs"`
+	Python        string `json:"python"`
+	Docker        string `json:"docker"`
+	DockerCompose string `json:"docker_compose"`
+	Php           string `json:"php"`
+	Composer      string `json:"composer"`
+	Node          string `json:"node"`
+	Npm           string `json:"npmjs"`
 }
 
 type HostMetrics struct {
+	NodeId       string  `json:"node_id"`
 	CPUUsage     float64 `json:"cpu_usage"`
 	MemUsage     float64 `json:"mem_usage"`
 	MemTotal     uint64  `json:"mem_total"`

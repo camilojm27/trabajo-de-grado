@@ -7,6 +7,6 @@ Broadcast::channel('containers', function () {
     return true;
 });
 
-Broadcast::channel('container-metrics{container_id}', function () {
+Broadcast::channel('node-metrics-{node_id}', function ($node_id) {
     return true;
 });

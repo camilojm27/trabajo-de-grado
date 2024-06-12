@@ -86,8 +86,9 @@ func (c *RabbitMQClient) Consume(ctx context.Context, queueName string, handler 
 	return nil
 }
 
-func (c *RabbitMQClient) Publish(ctx context.Context, body []byte) error {
+func (c *RabbitMQClient) Publish(ctx context.Context, exchange, routingKey string, mandatory, immediate bool, publishing amqp091.Publishing) error {
 	// Check if channel is open before using it
+	// TODO: Does it create the queue or needs to be declared before?
 	if c.ch.IsClosed() {
 		//TODO: What to do if the channel is closed?,
 		//this can happen if the username is deleted from the RabbitMQ management console
@@ -96,14 +97,11 @@ func (c *RabbitMQClient) Publish(ctx context.Context, body []byte) error {
 
 	err := c.ch.PublishWithContext(
 		ctx,
-		"",        // Exchange
-		"general", // Routing key
-		false,     // Mandatory
-		false,     // Immediate
-		amqp091.Publishing{
-			ContentType: "application/json", // Adjust content type based on your message
-			Body:        body,
-		},
+		exchange,
+		routingKey,
+		mandatory,
+		immediate,
+		publishing,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to publish message: %w", err)

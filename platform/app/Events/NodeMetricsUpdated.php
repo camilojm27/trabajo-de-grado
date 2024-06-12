@@ -10,7 +10,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class SystemMetricsUpdated implements ShouldBroadcast
+class NodeMetricsUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -19,13 +19,12 @@ class SystemMetricsUpdated implements ShouldBroadcast
     public function __construct($metrics)
     {
        $this->metrics = $metrics;
-       error_log("SystemMetricsUpdated: " . json_encode($metrics));
+       error_log("NodeMetricsUpdated: " . json_encode($metrics));
     }
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('container-metrics'. 1);
-        //return new PrivateChannel('container-metrics'. $this->metrics['container_id']);
+        return new PrivateChannel('node-metrics-'. $this->metrics['node_id']);
 
     }
 

@@ -1,4 +1,4 @@
-import {Link} from '@inertiajs/react'
+import {Link, router} from '@inertiajs/react'
 import {Separator} from "@/components/ui/separator.jsx"
 import {CardTitle, CardHeader, CardContent, Card, CardFooter} from "@/components/ui/card.jsx"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
@@ -9,6 +9,7 @@ import {JSX} from 'react/jsx-runtime'
 import CpuUsage from "@/components/app/CpuUsage";
 import RamUsage from "@/components/app/RamUsage";
 import NetUsage from "@/components/app/NetUsage";
+import axios from "axios";
 
 interface Props {
     auth: {
@@ -20,16 +21,53 @@ interface Props {
 export default function NodeDetail({auth, node}: Props) {
     // @ts-ignore
     const attributes = JSON.parse(node.attributes)
-    const container_id = "1";
+    const container_id = node.id;
     const chartRef = useRef(null);
     const [cpuUsage, setCpuUsage] = useState(0);
     const [ramData, setRamData] = useState({});
     const [netData, setNetData] = useState(null);
 
+    const [isActive, setIsActive] = useState(true);
+
+    // Detect user activity
+    useEffect(() => {
+        const handleUserActivity = () => {
+            setIsActive(true);
+            // Set a timeout to reset activity after 30 seconds of inactivity
+            clearTimeout(window.userActivityTimeout);
+            window.userActivityTimeout = setTimeout(() => setIsActive(false), 5000);
+        };
+
+        // Add event listeners for user activity
+        window.addEventListener('mousemove', handleUserActivity);
+        window.addEventListener('keypress', handleUserActivity);
+        window.addEventListener('touchstart', handleUserActivity);
+
+        // Cleanup event listeners on component unmount
+        return () => {
+            window.removeEventListener('mousemove', handleUserActivity);
+            window.removeEventListener('keypress', handleUserActivity);
+            window.removeEventListener('touchstart', handleUserActivity);
+            clearTimeout(window.userActivityTimeout);
+        };
+    }, []);
+
+    // Trigger metrics collection every 30 seconds if the user is active
+    useEffect(() => {
+            if (isActive) {
+                axios.post(`/nodes/metrics/${node.id}`)
+                    .then(response => console.log('Metrics sent:', response))
+                    .catch(error => console.error('Error sending metrics:', error));
+            }
+
+    }, [isActive, node.id]);
+
+
+
     useEffect(() => {
         // @ts-ignore
-        window.Echo.private(`container-metrics${container_id}`)
-            .listen('SystemMetricsUpdated', (data: any) => {
+        window.Echo.private(`node-metrics-${container_id}`)
+            .listen('NodeMetricsUpdated', (data: any) => {
                 console.table(data.metrics)
                 setCpuUsage(data.metrics.cpu_usage)
                 setRamData(data.metrics)
@@ -38,7 +76,7 @@ export default function NodeDetail({auth, node}: Props) {
 
         return () => {
             // @ts-ignore
-            window.Echo.leave(`container-metrics${container_id}`);
+            window.Echo.leave(`container-metrics-${container_id}`);
         };
     }, [cpuUsage, ramData, netData]);
     return (

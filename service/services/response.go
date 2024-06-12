@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/rabbitmq/amqp091-go"
 	"github.com/spf13/viper"
 )
 
@@ -44,7 +45,11 @@ func sendResponse(ctx context.Context, response ResponseMsg, client *RabbitMQCli
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = client.Publish(ctx, jsonDataBytes)
+	err = client.Publish(ctx, "", "general", false, false, amqp091.Publishing{
+		ContentType: "application/json", // Adjust content type based on your message
+		Body:        jsonDataBytes,
+	})
+
 	if err != nil {
 		fmt.Println(err)
 	}

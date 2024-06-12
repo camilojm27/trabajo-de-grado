@@ -23,7 +23,11 @@ class SendCreateContainer
             "pid" => $modelData['pid'],
             "data" => $modelData['data']
         ]);
-        $this->routing_key = $modelData['data']['node_id'];
+        if (array_key_exists('node_id', $modelData) ) {
+            $this->routing_key = $modelData['node_id'];
+            return;
+        }
+        $this->routing_key = ['data']['node_id'];
     }
 }
 

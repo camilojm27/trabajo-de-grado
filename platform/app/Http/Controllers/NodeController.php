@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SendCreateContainer;
 use App\Http\Requests\StoreNodeRequest;
 use App\Models\Node;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -103,6 +105,16 @@ class NodeController extends Controller
 
     }
 
+    public function metrics(Node $node): void
+    {
+        SendCreateContainer::dispatch([
+            //TODO: Improve this
+            "pid" => 00,
+            "node_id" => $node->id,
+            "data" => null
+        ], "METRICS:HOST");
+    }
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -130,6 +142,6 @@ class NodeController extends Controller
 
     public function exist()
     {
-        
+
     }
 }

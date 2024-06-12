@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/camilojm27/trabajo-de-grado/service/services/docker"
 	"github.com/camilojm27/trabajo-de-grado/service/services/system"
@@ -26,12 +27,11 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 	}
 	defer client.Close()
 
-	ctx := context.Background()
+	type contextKey string
+	ctx := context.WithValue(context.Background(), "nodeId", nodeId)
 	ctxTime := context.Background()
 
 	go docker.SendContainersListBasedOnEventsAndTime(client, ctxTime)
-
-	go system.HostMetrics()
 
 	handler := func(d amqp091.Delivery) {
 		var message types.ContainerRequest
@@ -49,6 +49,7 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 		fmt.Printf("Received message: %v\n", message.Data)
 
 		switch message.Action {
+		// ----------------- Container Actions -----------------
 		case "CREATE:CONTAINER":
 			container, err := docker.Create(ctx, message)
 			services.Response(ctx, client, container, message.Action, message.PID, err)
@@ -73,6 +74,13 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 		case "KILL:CONTAINER":
 			killed, err := docker.Kill(ctx, message.Data.ContainerID)
 			services.Response(ctx, client, killed, message.Action, message.PID, err)
+
+		// ----------------- Host Actions -----------------
+		case "METRICS:HOST":
+			ctxMetrics, _ := context.WithTimeout(ctx, time.Second*30)
+			//defer cancel()
+
+			system.HostMetrics(ctxMetrics, client)
 		}
 
 		d.Ack(true) // Acknowledge the message after successful processing
