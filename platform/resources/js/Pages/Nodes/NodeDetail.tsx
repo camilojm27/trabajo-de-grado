@@ -21,7 +21,7 @@ interface Props {
 export default function NodeDetail({auth, node}: Props) {
     // @ts-ignore
     const attributes = JSON.parse(node.attributes)
-    const container_id = node.id;
+    const node_id = node.id;
     const chartRef = useRef(null);
     const [cpuUsage, setCpuUsage] = useState(0);
     const [ramData, setRamData] = useState({});
@@ -66,7 +66,7 @@ export default function NodeDetail({auth, node}: Props) {
 
     useEffect(() => {
         // @ts-ignore
-        window.Echo.private(`node-metrics-${container_id}`)
+        window.Echo.private(`node-metrics-${node_id}`)
             .listen('NodeMetricsUpdated', (data: any) => {
                 console.table(data.metrics)
                 setCpuUsage(data.metrics.cpu_usage)
@@ -76,7 +76,7 @@ export default function NodeDetail({auth, node}: Props) {
 
         return () => {
             // @ts-ignore
-            window.Echo.leave(`container-metrics-${container_id}`);
+            window.Echo.leave(`container-metrics-${node_id}`);
         };
     }, [cpuUsage, ramData, netData]);
     return (

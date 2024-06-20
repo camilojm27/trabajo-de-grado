@@ -1,6 +1,7 @@
 package types
 
 type Stats struct {
+	NodeID      string  `json:"node_id"`
 	ContainerID string  `json:"container_id"`
 	CpuPercent  float64 `json:"cpu_percent"`
 	MemPercent  float64 `json:"mem_percent"`

@@ -43,7 +43,7 @@ export default function RamUsage({data}) {
                 scales: {
                     y: {
                         min: 0,
-                        max: Math.ceil(data.mem_total/1000000) ,
+                        max: Math.floor(data.mem_total / 1000000000),
                     },
                 },
             },
@@ -62,15 +62,21 @@ export default function RamUsage({data}) {
             if (chart.data.labels.length > maxDataPoints) {
                 chart.data.labels.shift(); // Remove the oldest label
                 chart.data.datasets[0].data.shift(); // Remove the oldest data point
-               chart.data.datasets[1].data.shift(); // Remove the oldest data point
+                chart.data.datasets[1].data.shift(); // Remove the oldest data point
             }
             chart.data.labels.push(now);
-            chart.data.datasets[0].data.push((data.mem_total - data.mem_available)/1000000);
-            chart.data.datasets[1].data.push((data.swap_total - data.swap_free)/1000000);
+            chart.data.datasets[0].data.push((data.mem_total - data.mem_available) / 1000000000);
+            chart.data.datasets[1].data.push((data.swap_total - data.swap_free) / 1000000000);
 
             chart.update();
         }
     }, [data]);
 
-    return <canvas ref={chartRef}/>;
+    return (
+        <>
+            total: {Math.floor(data.mem_total / 1000000000)} Gb <br/>
+            usage: {Math.floor((data.mem_total - data.mem_available) / 1000000000)} Gb <br/>
+            <canvas ref={chartRef}/>
+        </>
+    )
 }

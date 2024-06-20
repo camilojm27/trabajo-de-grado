@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Events\ContainerMetricsUpdated;
 use App\Events\ContainerProcessed;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -19,7 +20,7 @@ class CreateLogs
     /**
      * Handle the event.
      */
-    public function handle(ContainerProcessed $event): void
+    public function handle(ContainerMetricsUpdated $event): void
     {
         //
     }

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Events\ContainerMetricsUpdated;
 use App\Events\NodeMetricsUpdated;
 use Exception;
 use Illuminate\Console\Command;
@@ -55,17 +56,29 @@ class ConsumeMetrics extends Command
     private function setupQueue(): void
     {
         $this->channel->queue_declare('metrics', false, false, false, false);
+        $this->channel->queue_declare('containers-metrics', false, false, false, false);
     }
 
     private function consumeMessages(): void
     {
-        $this->channel->basic_consume('metrics', '', false, true, false, false, function ($message) {
+        $primaryCallback = function ($message) {
             try {
-                $this->processMessage($message);
+                $this->processHostsMetrics($message);
             } catch (Exception $e) {
                 $this->error($e->getMessage());
             }
-        });
+        };
+
+        $secondaryCallback = function ($message) {
+            try {
+                $this->processContainersMetrics($message);
+            } catch (Exception $e) {
+                $this->error($e->getMessage());
+            }
+        };
+
+        $this->channel->basic_consume('metrics', '', false, true, false, false, $primaryCallback);
+        $this->channel->basic_consume('containers-metrics', '', false, true, false, false, $secondaryCallback);
 
         while ($this->channel->is_consuming()) {
             $this->info('Waiting for messages...');
@@ -73,8 +86,12 @@ class ConsumeMetrics extends Command
         }
     }
 
-    private function processMessage($message)
+    private function processHostsMetrics($message): void
     {
         event(new NodeMetricsUpdated(json_decode($message->body, true)));
+    }
+    private function processContainersMetrics($message): void
+    {
+        event(new ContainerMetricsUpdated(json_decode($message->body, true)));
     }
 }

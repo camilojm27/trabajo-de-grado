@@ -339,4 +339,14 @@ class ContainerController extends Controller
             ], 500);
         }
     }
+
+    public function metrics(Container $container): void
+    {
+        SendCreateContainer::dispatch([
+            //TODO: Improve this
+            "pid" => 00,
+            "node_id" => $container->node_id,
+            "data" => $container->attributesToArray()
+        ], "METRICS:CONTAINER");
+    }
 }

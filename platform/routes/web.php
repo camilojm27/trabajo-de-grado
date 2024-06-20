@@ -35,6 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/containers/pause/{container}', [ContainerController::class, 'pause']);
     Route::post('/containers/unpause/{container}', [ContainerController::class, 'unpause']);
     Route::post('/containers/delete/{container}', [ContainerController::class, 'destroy']);
+
+    Route::post('/containers/metrics/{container}', [ContainerController::class, 'metrics']);
 });
 
 // -------------- Node Actions ----------------

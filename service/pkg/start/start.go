@@ -38,6 +38,9 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 		err := json.Unmarshal(d.Body, &message)
 		if err != nil {
 			fmt.Println("Error parsing JSON:", err)
+			if err != nil {
+				log.Panic(err.Error())
+			}
 			err := d.Nack(false, true) // Nack the message with requeue
 			if err != nil {
 				log.Panic(err.Error())
@@ -74,6 +77,9 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 		case "KILL:CONTAINER":
 			killed, err := docker.Kill(ctx, message.Data.ContainerID)
 			services.Response(ctx, client, killed, message.Action, message.PID, err)
+		case "METRICS:CONTAINER":
+			ctxMetrics, _ := context.WithTimeout(ctx, time.Second*30000)
+			docker.Stats(ctxMetrics, client, message.Data.ContainerID)
 
 		// ----------------- Host Actions -----------------
 		case "METRICS:HOST":
