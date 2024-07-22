@@ -3,8 +3,8 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Plataforma de gestion de Contenedores',
-  tagline: 'Dinosaurs are cool',
+  title: 'Plataforma de Gestion de Contenedores en Red',
+  tagline: '(con docker 🐳)',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -55,17 +55,17 @@ const config: Config = {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     navbar: {
-      title: 'My Site',
-      logo: {
-        alt: 'My Site Logo',
-        src: 'img/logo.svg',
-      },
+      title: 'Inicio',
+      // logo: {
+      //   alt: 'My Site Logo',
+      //   src: 'img/logo.svg',
+      // },
       items: [
         {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Tutorial',
+          label: 'Documentación',
         },
         // {to: '/blog', label: 'Blog', position: 'left'},
         {
@@ -79,33 +79,58 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: 'Documentación',
           items: [
             {
-              label: 'Tutorial',
-              to: '/docs/intro',
+              label: 'Instalación',
+              to: '/docs/installation',
+            },
+            {
+              label: 'Arquitectura',
+              to: '/docs/architecture',
             },
           ],
         },
         {
-          title: 'Community',
+          title: 'Gracias a:',
           items: [
             {
               label: 'Universidad del Valle',
               href: 'https://www.univalle.edu.co/',
             },
+            {
+              label: 'Jhon A. Sanabria',
+              href: 'https://www.linkedin.com/in/johhn-sanabria-a72bb317',
+            },
+            {
+              label: 'Camilo José Mezú Mina',
+              href: 'https://www.linkedin.com/in/camilojm27',
+            },
+            
           ],
         },
         {
-          title: 'More',
+          title: 'Tecnologias',
           items: [
             {
-              label: 'Laravel',
+              label: 'Laravel (PHP Framework)',
               href: 'https://laravel.com/',
             },
             {
-              label: 'GitHub',
-              href: 'https://github.com/facebook/docusaurus',
+              label: 'RabbitMQ',
+              href: 'https://www.rabbitmq.com/',
+            },
+            {
+              label: 'Go Programming Language',
+              href: 'https://golang.org/',
+            },
+            {
+              label: 'Docker SDK for Go',
+              href: 'https://docs.docker.com/engine/api/sdk/',
+            },
+            {
+              label: 'React.JS',
+              href: 'https://reactjs.org/',
             },
           ],
         },
@@ -113,7 +138,7 @@ const config: Config = {
       copyright: `Hecho con 💛 | Camilo José Mezú Mina | 👷🏾 con 📃🦖Docusaurus.`,
     },
     prism: {
-      theme: prismThemes.github,
+      theme: prismThemes.shadesOfPurple,
       darkTheme: prismThemes.dracula,
     },
   } satisfies Preset.ThemeConfig,

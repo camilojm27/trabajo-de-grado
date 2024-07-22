@@ -10,30 +10,29 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
+    title: 'Facil de usar',
     // Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        La plataforma esta diseñada para ser fácil de usar, y ahorrar tiempo tanto a desarrolladores
+        como administradores de sistemas.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Adaptable',
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        La plataforma es adaptable a cualquier tipo de proyecto, ya que utiliza tecnologías modernas y modulares como laravel y rabbitmq,
+        lo cual permite una fácil integración con otros sistemas.
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Potenciado por Codigo abierto',
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Este proyecto funciona gracias al esfuero de muchos desarrolladores y organizaciones que han contribuido a la comunidad de codigo abierto.
       </>
     ),
   },
