@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/camilojm27/trabajo-de-grado/service/pkg/join"
 	"log"
 	"net/url"
+
+	"github.com/camilojm27/trabajo-de-grado/service/pkg/join"
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -20,8 +21,10 @@ var joinCmd = &cobra.Command{
 		app := viper.Get("APP_URL")
 		welcomekey := viper.Get("WELCOME_KEY")
 		nodeid := viper.GetString("NODE_ID")
+		userEmail := viper.GetString("USER_EMAIL")
 
-		if app == "" || welcomekey == "" {
+		fmt.Println(args)
+		if app == "" || welcomekey == "" || userEmail == "" {
 			log.Fatal("Configuration is missing, run 'pgc config' to set configuration")
 		}
 
@@ -38,7 +41,7 @@ var joinCmd = &cobra.Command{
 					return
 				}
 			}
-			join.RunJoinCommand(cmd, args, app.(string), welcomekey.(string))
+			join.RunJoinCommand(cmd, args, app.(string), welcomekey.(string), userEmail)
 		}
 
 	},

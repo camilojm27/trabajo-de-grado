@@ -31,7 +31,8 @@ class StoreNodeRequest extends FormRequest
             'name' => 'string|max:64|unique:nodes|nullable',
             'hostname' => ['required', 'unique:nodes', 'string', 'max:64', 'regex:/^[a-zA-Z0-9]+(?:[.-][a-zA-Z0-9]+)*$/'],
             'ip_address' => 'required|ip',
-            'attributes' => 'required|json'
+            'attributes' => 'required|json',
+            'created_by' => 'required|email|exists:users,email',
         ];
     }
     protected function prepareForValidation(): void

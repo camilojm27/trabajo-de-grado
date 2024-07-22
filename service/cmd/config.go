@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -37,6 +38,8 @@ type (
 const (
 	appUrl = iota
 	welcomekey
+	hostname
+	userEmail
 )
 
 const (
@@ -69,8 +72,10 @@ func initialModel() model {
 	// Load environment variables
 	eAppUrl := viper.GetString("APP_URL")
 	eWelcomekey := viper.GetString("WELCOME_KEY")
+	eHostName := viper.GetString("HOSTNAME")
+	eUserMail := viper.GetString("USER_EMAIL")
+	var inputs = make([]textinput.Model, 4) // Change this to the number of inputs you have
 
-	var inputs = make([]textinput.Model, 2)
 	inputs[appUrl] = textinput.New()
 	inputs[appUrl].Placeholder = "https://laravel.com"
 	inputs[appUrl].Focus()
@@ -89,6 +94,28 @@ func initialModel() model {
 		inputs[welcomekey].SetValue(eWelcomekey)
 	}
 	inputs[welcomekey].EchoMode = textinput.EchoPassword
+
+	inputs[hostname] = textinput.New()
+	hostnameValue, _ := os.Hostname()
+	inputs[hostname].Placeholder = hostnameValue
+	inputs[hostname].CharLimit = 270
+	inputs[hostname].Width = 30
+	inputs[hostname].Prompt = ""
+
+	if eHostName != "" {
+		inputs[hostname].SetValue(eHostName)
+	}
+	if eHostName == "" {
+		inputs[hostname].SetValue(hostnameValue)
+	}
+
+	inputs[userEmail] = textinput.New()
+	inputs[userEmail].Placeholder = "user@example.com"
+	inputs[userEmail].CharLimit = 270
+	inputs[userEmail].Width = 30
+	if eUserMail != "" {
+		inputs[userEmail].SetValue(eUserMail)
+	}
 
 	return model{
 		inputs:  inputs,
@@ -109,7 +136,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyEnter:
 			if m.focused == len(m.inputs)-1 {
-				saveConfig(m.inputs[appUrl].Value(), m.inputs[welcomekey].Value())
+				var configValues []string
+				for _, input := range m.inputs {
+					configValues = append(configValues, input.Value())
+				}
+				saveConfig(configValues)
 				return m, tea.Quit
 			}
 			m.nextInput()
@@ -137,9 +168,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func saveConfig(s1, s2 string) {
-	viper.Set("APP_URL", s1)
-	viper.Set("WELCOME_KEY", s2)
+func saveConfig(s []string) {
+	viper.Set("APP_URL", s[appUrl])
+	viper.Set("WELCOME_KEY", s[welcomekey])
+	viper.Set("HOSTNAME", s[hostname])
+	viper.Set("USER_EMAIL", s[userEmail])
 	viper.WriteConfig()
 }
 
@@ -147,6 +180,8 @@ func (m model) View() string {
 	return fmt.Sprintf(
 		` %s
  %s			%s %s
+ %s %s
+ %s %s
  %s
 
 `,
@@ -154,6 +189,11 @@ func (m model) View() string {
 		m.inputs[appUrl].View(),
 		inputStyle.Width(15).Render("Welcome Key"),
 		m.inputs[welcomekey].View(),
+		inputStyle.Width(15).Render("Hostname"),
+		m.inputs[hostname].View(),
+		inputStyle.Width(15).Render("User Email"),
+		m.inputs[userEmail].View(),
+
 		continueStyle.Render("Continue ->"),
 	) + "\n"
 }

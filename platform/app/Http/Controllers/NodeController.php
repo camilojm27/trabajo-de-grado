@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Events\SendCreateContainer;
 use App\Http\Requests\StoreNodeRequest;
 use App\Models\Node;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -17,13 +19,25 @@ use Symfony\Component\HttpFoundation\Response;
 class NodeController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display the listing of Nodes a user has access.
      */
     public function index(): \Inertia\Response
     {
-        //TODO: Agregar cache
+        $user = Auth::user();
+
+        $nodes = Node::where('created_by', $user->id) // Get nodes created by the user
+            ->orWhereHas('users', function ($query) use ($user) { // Get nodes the user has access to
+                $query->where('user_id', $user->id);
+            })
+//            ->with('users') // Eager load
+            ->get()
+            ->map(function ($node) {
+                $node->isOnline = $node->isOnline(); // Add isOnline attribute
+                return $node;
+            });
+
         return Inertia::render('Nodes/Nodes', [
-            'nodes' => Node::all(),
+            'nodes' => $nodes
         ]);
     }
 
@@ -33,7 +47,14 @@ class NodeController extends Controller
      */
     public function store(StoreNodeRequest $request): JsonResponse
     {
-        $validated = $request->safe(['name','hostname', 'ip_address', 'attributes']);
+        try {
+            $validated = $request->safe(['name', 'hostname', 'created_by', 'ip_address', 'attributes']);
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(['data' => $request->all()], Response::HTTP_BAD_REQUEST);
+        }
+        $validated['created_by'] = User::where("email", $validated['created_by'])->first()->id;
+        error_log(json_encode($validated));
         $node = new Node();
         $node->fill($validated);
         $node->save();
@@ -63,29 +84,27 @@ class NodeController extends Controller
             $rmqvhost = env('RABBITMQ_VHOST', '/');
 
             // Define la URL de la API de RabbitMQ
-            $url = $rmqhost.':15672/api/users/' . $user;
+            $url = $rmqhost . ':15672/api/users/' . $user;
 
-        // Crea el nuevo usuario
-        $response = Http::withBasicAuth($adminUser, $adminPassword)
-            ->put($url, [
-                'password' => $password,
-                'tags' => $tags,
-            ]);
-        if ($response->failed()) {
-            return response()->json(['error' => 'Error creating user'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-        $url = $rmqhost.':15672/api/permissions/' . urlencode($rmqvhost) . '/' . $user;
-        $response = Http::withBasicAuth($adminUser, $adminPassword)
-            ->put($url, [
-                'configure' => "^{$user}$",
-                'write' => '.*',
-                'read' => '.*'
-            ]);
-        if ($response->failed()) {
-            return response()->json(['error' => 'Error setting permissions'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-            elseif ($response->status() == 201 or $response->status() == 204) {
+            // Crea el nuevo usuario
+            $response = Http::withBasicAuth($adminUser, $adminPassword)
+                ->put($url, [
+                    'password' => $password,
+                    'tags' => $tags,
+                ]);
+            if ($response->failed()) {
+                return response()->json(['error' => 'Error creating user'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+            $url = $rmqhost . ':15672/api/permissions/' . urlencode($rmqvhost) . '/' . $user;
+            $response = Http::withBasicAuth($adminUser, $adminPassword)
+                ->put($url, [
+                    'configure' => "^{$user}$",
+                    'write' => '.*',
+                    'read' => '.*'
+                ]);
+            if ($response->failed()) {
+                return response()->json(['error' => 'Error setting permissions'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            } elseif ($response->status() == 201 or $response->status() == 204) {
                 $credentials = [
                     'RABBITMQ_HOST' => $rmqhost,
                     'RABBITMQ_PORT' => env('RABBITMQ_PORT', 5672),
@@ -100,9 +119,6 @@ class NodeController extends Controller
             error_log($e->getMessage());
             error_log($e->getTraceAsString());
         }
-
-
-
     }
 
     public function metrics(Node $node): void
@@ -142,6 +158,5 @@ class NodeController extends Controller
 
     public function exist()
     {
-
     }
 }

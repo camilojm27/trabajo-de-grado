@@ -7,6 +7,8 @@ use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContainerController;
 use App\Http\Controllers\NodeController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -42,14 +44,38 @@ Route::middleware('auth')->group(function () {
 // -------------- Node Actions ----------------
 Route::middleware('auth')->group(function () {
     Route::post('/nodes/metrics/{node}', [NodeController::class, 'metrics']);
-
 });
 
+//Route::get('/config', [ConfigurationController::class, 'edit'])->middleware(['auth', 'verified'])->name('config.edit');
 Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/nodes', [NodeController::class, 'index'])->middleware(['auth', 'verified'])->name('nodes');
 
 Route::get('/nodes/{node}', [NodeController::class, 'show'])->middleware(['auth', 'verified'])->name('nodeDetail');
+
+// Laravel Routes
+// The Email Verification Notice
+
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->middleware('auth')->name('verification.notice');
+
+// The Email Verification Handler
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+
+    return redirect('/home');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+//Resending the Verification Email
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+
+    return back()->with('message',
+        'Verification link sent!'
+    );
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -57,4 +83,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

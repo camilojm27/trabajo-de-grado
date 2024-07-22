@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/camilojm27/trabajo-de-grado/service/services/system"
 	"io"
 	"log"
 	"net/http"
-	"os"
+
+	"github.com/camilojm27/trabajo-de-grado/service/services/system"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,19 +18,18 @@ type payloadType struct {
 	WelcomeKey string `json:"welcome_key"`
 	Hostname   string `json:"hostname"`
 	Attributes string `json:"attributes"`
+	UserEmail  string `json:"created_by"`
 }
 
-func RunJoinCommand(cmd *cobra.Command, args []string, apiEndpoint string, welcomeKey string) {
+func RunJoinCommand(cmd *cobra.Command, args []string, apiEndpoint string, welcomeKey string, userEmail string) {
 	url := apiEndpoint + "/api/nodes/"
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Fatalf("Error getting hostname: %v", err)
-	}
+	hostname := viper.GetString("HOSTNAME")
 
 	payload := payloadType{
 		WelcomeKey: welcomeKey,
 		Hostname:   hostname,
 		Attributes: system.Data,
+		UserEmail:  userEmail,
 	}
 
 	jsonPayload, err := json.Marshal(payload)
@@ -74,6 +73,18 @@ func RunJoinCommand(cmd *cobra.Command, args []string, apiEndpoint string, welco
 		viper.Set("NODE_ID", jsonNodeID.NodeID)
 		viper.WriteConfig()
 		getCredentials(jsonNodeID.NodeID, apiEndpoint)
+
+	default:
+		//TODO: Make this a util function
+		fmt.Println("Error creating post:", resp.Status)
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(string(body))
 	}
 }
 

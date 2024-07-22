@@ -42,5 +42,6 @@ export interface Node {
     created_at: string;
     updated_at: string;
     attributes: Attributes; // Assuming this is a JSON string, you may need to parse it when using the data
+    isOnline?: boolean;
 }
 

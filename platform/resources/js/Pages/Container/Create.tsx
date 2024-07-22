@@ -244,7 +244,7 @@ const items = [
                                                                                 node.id
                                                                             }
                                                                         >
-                                                                            {node.name ||
+                                                                            {node.hostname ||
                                                                                 node.id}
                                                                         </SelectItem>
                                                                     )

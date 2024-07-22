@@ -15,16 +15,17 @@ class NodeMetricsUpdated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $metrics;
-
+    public string $node_id;
     public function __construct($metrics)
     {
        $this->metrics = $metrics;
+       $this->node_id = $metrics['node_id'];
        error_log("NodeMetricsUpdated: " . json_encode($metrics));
     }
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('node-metrics-'. $this->metrics['node_id']);
+        return new PrivateChannel('node-metrics-'. $this->node_id);
 
     }
 

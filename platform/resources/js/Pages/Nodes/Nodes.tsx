@@ -19,15 +19,21 @@ interface NodesProps {
 }
 export default function Nodes({auth, nodes} : NodesProps) {
     const [showDataTable, setShowDataTable] = useState(false);
-
+    console.log(nodes);
     const listItems = nodes.map(node =>
         <Card key={node.id}>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold">{node.name}</h2>
-                    <Badge className="bg-green-200 text-green-800" variant="outline">
-                        Online
-                    </Badge>
+                    {node.isOnline ? (
+                        <Badge className="bg-green-200 text-green-800" variant="outline">
+                            Online
+                        </Badge>                    ) : (
+                        <Badge className="bg-red-200 text-red-800" variant="outline">
+                            Offline
+                        </Badge>
+                    )}
+
                 </div>
             </CardHeader>
             <CardContent>

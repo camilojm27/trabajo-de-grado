@@ -34,7 +34,9 @@ export default function NodeDetail({auth, node}: Props) {
         const handleUserActivity = () => {
             setIsActive(true);
             // Set a timeout to reset activity after 30 seconds of inactivity
+            // @ts-ignore
             clearTimeout(window.userActivityTimeout);
+            // @ts-ignore
             window.userActivityTimeout = setTimeout(() => setIsActive(false), 5000);
         };
 
@@ -48,6 +50,7 @@ export default function NodeDetail({auth, node}: Props) {
             window.removeEventListener('mousemove', handleUserActivity);
             window.removeEventListener('keypress', handleUserActivity);
             window.removeEventListener('touchstart', handleUserActivity);
+            //@ts-ignore
             clearTimeout(window.userActivityTimeout);
         };
     }, []);

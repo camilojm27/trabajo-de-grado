@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('nodes', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->unsignedBigInteger('created_by'); // Foreign key to the users table
             $table->string('name')->unique()->nullable();
             $table->string('hostname')->unique();
             $table->ipAddress();
             $table->timestamps();
             $table->json('attributes')->nullable();
-            //$table->timestamp('last_connection');
+            
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
