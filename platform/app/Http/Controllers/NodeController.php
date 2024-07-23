@@ -30,11 +30,7 @@ class NodeController extends Controller
                 $query->where('user_id', $user->id);
             })
 //            ->with('users') // Eager load
-            ->get()
-            ->map(function ($node) {
-                $node->isOnline = $node->isOnline(); // Add isOnline attribute
-                return $node;
-            });
+            ->get();
 
         return Inertia::render('Nodes/Nodes', [
             'nodes' => $nodes

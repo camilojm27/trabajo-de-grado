@@ -16,14 +16,14 @@ class ContainerProcessed implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-
+    public string $node_id;
     /**
      * Create a new event instance.
      */
 
-    public function __construct()
+    public function __construct(string $node_id)
     {
-
+        $this->node_id = $node_id;
     }
 
     /**

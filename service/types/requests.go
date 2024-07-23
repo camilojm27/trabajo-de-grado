@@ -23,12 +23,19 @@ type ContainerRequestData struct {
 }
 
 type ContainerRequestDataAttributes struct {
-	Cmd string `json:"cmd"`
-	// Ports []struct{} `json:"ports"`
-	Env []struct {
-		Name  string `json:"name"`
-		Value string `json:"value"`
-	} `json:"env"`
-	Volumes       []string `json:"volumes"`
-	AdvancedBools []string `json:"avanced_bools"` // Note: Typo
+    Cmd     string `json:"cmd"`
+    Ports   []PortBinding `json:"ports"`
+    Env     []struct {
+        Name  string `json:"name"`
+        Value string `json:"value"`
+    } `json:"env"`
+    Volumes []string `json:"volumes"`
+    AdvancedBools []string `json:"advanced_bools"` // Fixed typo
+}
+
+type PortBinding struct {
+    HostIP        string `json:"host_ip"`
+    HostPort      string `json:"host_port"`
+    ContainerPort string `json:"container_port"`
+    Protocol      string `json:"protocol"`
 }

@@ -33,9 +33,9 @@ class CreateContainerToHost
 
         $channel = $connection->channel();
 
-        $channel->queue_declare($event->routing_key, false, false, false, false);
+        $channel->queue_declare($event->routingKey, false, false, false, false);
         $message = new AMQPMessage($event->payload);
-        $channel->basic_publish($message, '', $event->routing_key);
+        $channel->basic_publish($message, '', $event->routingKey);
 
         $channel->close();
         $connection->close();

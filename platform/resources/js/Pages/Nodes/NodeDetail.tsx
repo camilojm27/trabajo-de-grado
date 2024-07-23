@@ -10,6 +10,7 @@ import CpuUsage from "@/components/app/CpuUsage";
 import RamUsage from "@/components/app/RamUsage";
 import NetUsage from "@/components/app/NetUsage";
 import axios from "axios";
+import {Badge} from "@/components/ui/badge";
 
 interface Props {
     auth: {
@@ -116,13 +117,17 @@ export default function NodeDetail({auth, node}: Props) {
                         <div className="flex items-center text-sm gap-2">
                             <a className="font-medium" href="#" target="_blank">
                                 linux-server.example.com
+                                //
                             </a>
                             <Separator className="h-5" orientation="vertical"/>
-                            <div className="text-gray-500 flex items-center gap-2 dark:text-gray-400">
-              <span
-                  className="inline-block w-2 h-2 bg-[#09CE6B] rounded-full animate-ping duration-[5000]"/>
-                                Online
-                            </div>
+                            {node.isOnline ? (
+                                <Badge className="bg-green-200 text-green-800" variant="outline">
+                                    Online
+                                </Badge>                    ) : (
+                                <Badge className="bg-red-200 text-red-800" variant="outline">
+                                    Offline
+                                </Badge>
+                            )}
                         </div>
                     </div>
                     <div className="grid gap-6 max-w-6xl w-full mx-auto lg:grid-cols-2">

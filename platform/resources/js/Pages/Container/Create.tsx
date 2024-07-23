@@ -39,6 +39,7 @@ import { User } from '@/types';
 import {Node} from "@/types/node"
 import { Checkbox } from '@/components/ui/checkbox';
 import React from "react";
+import {createContainerSchema} from "@/types/zod";
 
 interface Props {
     auth: {
@@ -81,53 +82,29 @@ const items = [
     }
 ] as const;
 
-    const formSchema = z.object({
-        node: z.string().uuid(),
-        name: z.string().min(3).max(100),
-        image: z.string().min(3).max(100),
-        cmd: z.string().min(0).max(1000),
-        ports: z
-            .array(
-                z
-                    .string().min(0)
-                    .regex(
-                        /^(?:(?:\d{0,5}|(?:\d{0,3}\.){3}\d{0,3}):)?(\d{0,5})(?::(\d{0,5}))?(?:\/(tcp|udp|sctp))?$/
-                    )
-            )
-            .min(0),
-        env: z
-            .array(
-                z.object({ name: z.string().min(0), value: z.string().min(0) })
-            )
-            .min(0),
-        volumes: z.array(z.string().min(0)).min(0),
-        advanced_bools: z
-            .array(z.string())
-            .refine((value) => value.some((item) => item), {
-                message: "You have to select at least one item.",
-            }),
-    });
+
 
     //TODO: Eliminar los valores de prueba
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
+    const form = useForm<z.infer<typeof createContainerSchema>>({
+        resolver: zodResolver(createContainerSchema),
         defaultValues: {
             node: "",
             name: "",
             image: "",
             cmd: "",
-            ports: [],
             env: [{ name: "", value: "" }],
-            volumes: [],
+            ports: [{ hostPort: '', containerPort: '', protocol: 'tcp' }],
+            volumes: [{ hostPath: '', containerPath: '' }],
             advanced_bools: ["detach"],
         },
     });
 
   const { register, control, handleSubmit, setError, formState: { errors } } = form
 
-    function onSubmit(data: z.infer<typeof formSchema>) {
-        console.log(data);
-        const t = {
+    function onSubmit(data: z.infer<typeof createContainerSchema>) {
+        // setIsSubmitting(true)
+
+        const formattedData = {
             node: data.node,
             name: data.name,
             image: data.image,
@@ -135,22 +112,43 @@ const items = [
                 cmd: data.cmd,
                 ports: data.ports,
                 env: data.env,
-                volumes: data.volumes,
+                volumes: data.volumes.map(v => `${v.hostPath}:${v.containerPath}`),
                 advanced_bools: data.advanced_bools,
             },
-        };
+        }
 
-        toast({
-            title: "You submitted the following values:",
-            description: (
-                <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                    <code className="text-white">
-                        {JSON.stringify(t, null, 2)}
-                    </code>
-                </pre>
-            ),
-        });
-        router.post("/containers/store", t);
+        router.post("/containers/store", formattedData, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: (props) => {
+                console.log(props.props)
+                // setIsSubmitting(false)
+                toast({
+                    title: "Container created successfully",
+                    description: "Your container has been created and is being processed.",
+                })
+                //TODO: REDIRECT
+
+                // Optionally, reset the form or redirect
+                form.reset()
+                // router.visit('/containers')
+            },
+            onError: (errors) => {
+                // setIsSubmitting(false)
+                toast({
+                    title: "Error creating container",
+                    description: "Please check the form for errors and try again.",
+                    variant: "destructive",
+                })
+                // Set errors on the form
+                Object.keys(errors).forEach(key => {
+                    form.setError(key as any, {
+                        type: "manual",
+                        message: errors[key] as string
+                    })
+                })
+            },
+        })
     }
 
     const envFields = useFieldArray({
@@ -159,14 +157,12 @@ const items = [
   });
 
     const portFields = useFieldArray({
-    control,
-        // @ts-ignore
-    name: 'ports',
-  });
+        control,
+        name: 'ports',
+    });
 
     const volumsFields = useFieldArray({
         control,
-        // @ts-ignore
         name: "volumes",
     });
 
@@ -193,413 +189,275 @@ const items = [
                 </Link>
             }
         >
-            <Head title="Containers" />
+            <Head title="Create Container" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                        {/* <div className="p-6 text-gray-900 dark:text-gray-100">
-                            You're logged in!
-                        </div> */}
                         <Form {...form}>
-                            <form
-                                onSubmit={form.handleSubmit(onSubmit)}
-                                className="w-2/3 space-y-6"
-                            >
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 p-6">
                                 <LocalTabs>
-                                    <section>
+                                    <section className="space-y-6">
                                         <FormField
-                                            control={form.control}
+                                            control={control}
                                             name="node"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="w-full">
-                                                        Selecciona el nodo donde
-                                                        quieres crear el
-                                                        contenedor:
-                                                    </FormLabel>
+                                                    <FormLabel>Nodo</FormLabel>
                                                     <Select
-                                                        onValueChange={
-                                                            field.onChange
-                                                        }
-                                                        defaultValue={
-                                                            field.value
-                                                        }
+                                                        onValueChange={field.onChange}
+                                                        defaultValue={field.value}
                                                     >
-                                                        <SelectTrigger className="w-[320px]">
-                                                            <SelectValue placeholder="Seleccionar un nodo" />
-                                                        </SelectTrigger>
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Seleccionar un nodo" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
                                                         <SelectContent>
-                                                            {nodes &&
-                                                                nodes.map(
-                                                                    (
-                                                                        node,
-                                                                        index
-                                                                    ) => (
-                                                                        <SelectItem
-                                                                            key={
-                                                                                index
-                                                                            }
-                                                                            value={
-                                                                                node.id
-                                                                            }
-                                                                        >
-                                                                            {node.hostname ||
-                                                                                node.id}
-                                                                        </SelectItem>
-                                                                    )
-                                                                )}
+                                                            {nodes.map((node) => (
+                                                                <SelectItem key={node.id} value={node.id}>
+                                                                    {node.hostname || node.id}
+                                                                </SelectItem>
+                                                            ))}
                                                         </SelectContent>
                                                     </Select>
+                                                    <FormDescription>
+                                                        Selecciona el nodo donde quieres crear el contenedor.
+                                                    </FormDescription>
+                                                    <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
+
                                         <FormField
-                                            control={form.control}
+                                            control={control}
                                             name="image"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>
-                                                        Nombre de la imagen
-                                                    </FormLabel>
+                                                    <FormLabel>Imagen</FormLabel>
                                                     <FormControl>
-                                                        <Input
-                                                            placeholder="ubuntu:24.04"
-                                                            {...field}
-                                                        />
+                                                        <Input placeholder="ubuntu:24.04" {...field} />
                                                     </FormControl>
-                                                    {errors.image && (
-                                                        <div className="text-red-600">
-                                                            {
-                                                                errors.image
-                                                                    .message
-                                                            }
-                                                        </div>
-                                                    )}
+                                                    <FormDescription>
+                                                        Nombre de la imagen Docker a utilizar.
+                                                    </FormDescription>
+                                                    <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
+
                                         <FormField
-                                            control={form.control}
+                                            control={control}
                                             name="name"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>
-                                                        Nombre del Contenedor
-                                                        (nombre que deseas
-                                                        darle)
-                                                    </FormLabel>
+                                                    <FormLabel>Nombre del Contenedor</FormLabel>
                                                     <FormControl>
-                                                        <Input
-                                                            placeholder="Noble Numbat"
-                                                            {...field}
-                                                        />
+                                                        <Input placeholder="Noble Numbat" {...field} />
                                                     </FormControl>
-                                                    {errors.name && (
-                                                        <div className="text-red-600">
-                                                            {
-                                                                errors.name
-                                                                    .message
-                                                            }
-                                                        </div>
-                                                    )}
+                                                    <FormDescription>
+                                                        Un nombre único para identificar tu contenedor.
+                                                    </FormDescription>
+                                                    <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
+
                                         <FormField
-                                            control={form.control}
+                                            control={control}
                                             name="cmd"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>
-                                                        Comando
-                                                    </FormLabel>
+                                                    <FormLabel>Comando</FormLabel>
                                                     <FormControl>
-                                                        <Input
-                                                            placeholder="tail -f /dev/null"
-                                                            {...field}
-                                                        />
+                                                        <Input placeholder="tail -f /dev/null" {...field} />
                                                     </FormControl>
-                                                    {errors.name && (
-                                                        <div className="text-red-600">
-                                                            {
-                                                                errors.name
-                                                                    .message
-                                                            }
-                                                        </div>
-                                                    )}
+                                                    <FormDescription>
+                                                        El comando a ejecutar cuando el contenedor inicie.
+                                                    </FormDescription>
+                                                    <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
-                                        <br/>
-                                        <FormItem>
-                                            <FormLabel>
-                                                Variables de Entorno
-                                                {/*<FormDescription>*/}
-                                                {/*    Agregar Variables de*/}
-                                                {/*    entorno*/}
-                                                {/*</FormDescription>*/}
-                                                <br/>
-
-                                            </FormLabel>
-                                            {envFields.fields.map(
-                                                    (field, index) => (
-                                                        <div
-                                                            key={field.id}
-                                                            className="flex space-x-4 items-center"
-                                                        >
-                                                            <Label className="w-full">
-                                                                Nombre:
-                                                                <Input
-                                                                    type="text"
-                                                                    {...register(
-                                                                        `env.${index}.name`
-                                                                    )}
-                                                                    placeholder="NOMBRE_VARIABLE"
-                                                                />
-                                                            </Label>
-                                                            <Label className=" w-full">
-                                                                Valor:
-                                                                <Input
-                                                                    type="text"
-                                                                    {...register(
-                                                                        `env.${index}.value`
-                                                                    )}
-                                                                    placeholder="VALOR_VAR"
-                                                                />
-                                                            </Label>
-                                                            {envFields.fields
-                                                                .length > 1 && (
-                                                                <Button
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        envFields.remove(
-                                                                            index
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Trash2 />
-                                                                </Button>
-                                                            )}
-                                                        </div>
-                                                    )
-                                                )}
-                                                <Button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        envFields.append({
-                                                            name: "",
-                                                            value: "",
-                                                        })
-                                                    }
-                                                >
-                                                    Agregar nueva variable
-                                                </Button>
-                                                {/* <DialogFooter>
-                                            <Button type="submit">
-                                                Save changes
-                                            </Button>
-                                        </DialogFooter> */}
-                                        </FormItem>
-                                        <FormItem>
-                                            <FormLabel>
-                                                Puertos
-                                                <FormDescription>
-                                                    Agrega los volumenes que
-                                                    necesitará el contenedor.
-                                                </FormDescription>
-                                            </FormLabel>
-
-                                                {portFields.fields.map(
-                                                    (field, index) => (
-                                                        <div
-                                                            key={field.id}
-                                                            className="flex space-x-4 items-center"
-                                                        >
-                                                            <Label className="w-full">
-                                                                <Input
-                                                                    type="text"
-                                                                    {...register(
-                                                                        `ports.${index}`
-                                                                    )}
-                                                                    placeholder="8080:80/udp"
-                                                                />
-                                                            </Label>
-
-                                                            {portFields.fields
-                                                                .length > 1 && (
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="secondary"
-                                                                    onClick={() =>
-                                                                        portFields.remove(
-                                                                            index
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Trash2 />
-                                                                </Button>
-                                                            )}
-                                                            <Button
-                                                                type="button"
-                                                                variant="secondary"
-                                                                onClick={() =>
-                                                                    // @ts-ignore
-                                                                    portFields.append("")
-                                                                }
-                                                            >
-                                                                {" "}
-                                                                Agregar nueva variable
-                                                            </Button>
-                                                        </div>
-                                                    )
-                                                )}
-
-                                        </FormItem>
 
                                         <FormItem>
-                                            <FormLabel>
-                                                Volumenes
-                                                <FormDescription>
-                                                    Agrega los volumenes que
-                                                    necesitará el contenedor.
-                                                </FormDescription>
-                                            </FormLabel>
-                                            {volumsFields.fields.map(
-                                                (field, index) => (
-                                                    <div
-                                                        key={field.id}
-                                                        className="flex space-x-4 items-center"
-                                                    >
-                                                        <Label className="w-full">
-                                                            <Input
-                                                                type="text"
-                                                                {...register(
-                                                                    `volumes.${index}`
-                                                                )}
-                                                                placeholder="myapp:/usr/share/nginx/html"
-                                                            />
-                                                        </Label>
-                                                        {volumsFields.fields
-                                                            .length > 1 && (
-                                                            <Button
-                                                                type="button"
-                                                                variant="secondary"
-                                                                onClick={() =>
-                                                                    volumsFields.remove(
-                                                                        index
-                                                                    )
-                                                                }
-                                                            >
-                                                                <Trash2 />
-                                                            </Button>
-                                                        )}
+                                            <FormLabel>Variables de Entorno</FormLabel>
+                                            {envFields.fields.map((field, index) => (
+                                                <div key={field.id} className="flex space-x-4 items-center mb-2">
+                                                    <FormControl>
+                                                        <Input
+                                                            {...form.register(`env.${index}.name`)}
+                                                            placeholder="Nombre"
+                                                        />
+                                                    </FormControl>
+                                                    <FormControl>
+                                                        <Input
+                                                            {...form.register(`env.${index}.value`)}
+                                                            placeholder="Valor"
+                                                        />
+                                                    </FormControl>
+                                                    {envFields.fields.length > 1 && (
                                                         <Button
                                                             type="button"
                                                             variant="secondary"
-                                                            onClick={() =>
-                                                                volumsFields.append(
-                                                                    // @ts-ignore
-                                                                    ""
-                                                                )
-                                                            }
+                                                            onClick={() => envFields.remove(index)}
                                                         >
-                                                            {" "}
-                                                            Agregar nuevo
-                                                            volumen
+                                                            <Trash2 />
                                                         </Button>
-                                                    </div>
-                                                )
-                                            )}
+                                                    )}
+                                                </div>
+                                            ))}
+                                            <Button
+                                                type="button"
+                                                variant="secondary"
+                                                onClick={() => envFields.append({ name: "", value: "" })}
+                                            >
+                                                Agregar Variable
+                                            </Button>
+                                            <FormDescription>
+                                                Define las variables de entorno para tu contenedor.
+                                            </FormDescription>
                                         </FormItem>
-                                        <FormDescription>
-                                            Cuando el servidor este disponible
-                                            se creará el contenedor.
-                                        </FormDescription>
-                                        <FormMessage />
+
+                                        <FormItem>
+                                            <FormLabel>Puertos</FormLabel>
+                                            <FormDescription>
+                                                Mapea los puertos del contenedor a los del host (hostPort:containerPort/protocol)
+                                            </FormDescription>
+                                            {portFields.fields.map((field, index) => (
+                                                <div key={field.id} className="flex space-x-4 items-center mb-2">
+                                                    <Input
+                                                        type="text"
+                                                        {...register(`ports.${index}.hostPort`)}
+                                                        placeholder="Host Port"
+                                                        className="w-1/4"
+                                                    />
+                                                    <span>:</span>
+                                                    <Input
+                                                        type="text"
+                                                        {...register(`ports.${index}.containerPort`)}
+                                                        placeholder="Container Port"
+                                                        className="w-1/4"
+                                                    />
+                                                    <Select
+                                                        {...register(`ports.${index}.protocol`)}
+                                                        defaultValue="tcp"
+                                                    >
+                                                        <SelectTrigger className="w-1/4">
+                                                            <SelectValue placeholder="Protocol" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="tcp">TCP</SelectItem>
+                                                            <SelectItem value="udp">UDP</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    {portFields.fields.length > 1 && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="secondary"
+                                                            onClick={() => portFields.remove(index)}
+                                                        >
+                                                            <Trash2 />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            <Button
+                                                type="button"
+                                                variant="secondary"
+                                                onClick={() => portFields.append({ hostPort: '', containerPort: '', protocol: 'tcp' })}
+                                            >
+                                                Add Port Mapping
+                                            </Button>
+                                        </FormItem>
+                                        <FormItem>
+                                            <FormLabel>Volumes</FormLabel>
+                                            <FormDescription>
+                                                Mapea los volumenes del host al contenedor (hostPath:containerPath)
+                                            </FormDescription>
+                                            {volumsFields.fields.map((field, index) => (
+                                                <div key={field.id} className="flex space-x-4 items-center mb-2">
+                                                    <Input
+                                                        type="text"
+                                                        {...register(`volumes.${index}.hostPath`)}
+                                                        placeholder="Host Path"
+                                                        className="w-1/2"
+                                                    />
+                                                    <span>:</span>
+                                                    <Input
+                                                        type="text"
+                                                        {...register(`volumes.${index}.containerPath`)}
+                                                        placeholder="Container Path"
+                                                        className="w-1/2"
+                                                    />
+                                                    {volumsFields.fields.length > 1 && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="secondary"
+                                                            onClick={() => volumsFields.remove(index)}
+                                                        >
+                                                            <Trash2 />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            <Button
+                                                type="button"
+                                                variant="secondary"
+                                                onClick={() => volumsFields.append({ hostPath: '', containerPath: '' })}
+                                            >
+                                                Add Volume
+                                            </Button>
+                                        </FormItem>
                                     </section>
                                     <section>
                                         <FormField
-                                            control={form.control}
+                                            control={control}
                                             name="advanced_bools"
                                             render={() => (
                                                 <FormItem>
-                                                    <div className="mb-4">
-                                                        <FormLabel className="text-base">
-                                                            Activar o desactivar
-                                                            opciones
-                                                        </FormLabel>
-                                                        <FormDescription>
-                                                            Selecciona las
-                                                            opciones que deseas
-                                                            tener activas en el
-                                                            contenedor
-                                                        </FormDescription>
+                                                    <FormLabel className="text-base">Opciones Avanzadas</FormLabel>
+                                                    <FormDescription>
+                                                        Selecciona las opciones avanzadas para el contenedor.
+                                                    </FormDescription>
+                                                    <div className="space-y-4 mt-4">
+                                                        {items.map((item) => (
+                                                            <FormField
+                                                                control={control}
+                                                                name="advanced_bools"
+                                                                render={({ field }) => {
+                                                                    return (
+                                                                        <FormItem
+                                                                            key={item.id}
+                                                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                                                        >
+                                                                            <FormControl>
+                                                                                <Checkbox
+                                                                                    checked={field.value?.includes(item.id)}
+                                                                                    onCheckedChange={(checked) => {
+                                                                                        return checked
+                                                                                            ? field.onChange([...field.value, item.id])
+                                                                                            : field.onChange(field.value?.filter((value) => value !== item.id));
+                                                                                    }}
+                                                                                    disabled={item.id === "detach"}
+                                                                                />
+                                                                            </FormControl>
+                                                                            <FormLabel className="font-normal">
+                                                                                {item.label}
+                                                                            </FormLabel>
+                                                                        </FormItem>
+                                                                    );
+                                                                }}
+                                                            />
+                                                        ))}
                                                     </div>
-                                                    {items.map((item) => (
-                                                        <FormField
-                                                            key={item.id}
-                                                            control={
-                                                                form.control
-                                                            }
-                                                            name="advanced_bools"
-                                                            render={({
-                                                                field,
-                                                            }) => {
-                                                                return (
-                                                                    <FormItem
-                                                                        key={
-                                                                            item.id
-                                                                        }
-                                                                        className="flex flex-row items-start space-x-3 space-y-0"
-                                                                    >
-                                                                        <FormControl>
-                                                                            <Checkbox
-                                                                                checked={field.value?.includes(
-                                                                                    item.id
-                                                                                )}
-                                                                                onCheckedChange={(
-                                                                                    checked
-                                                                                ) => {
-                                                                                    return checked
-                                                                                        ? field.onChange(
-                                                                                              [
-                                                                                                  ...field.value,
-                                                                                                  item.id,
-                                                                                              ]
-                                                                                          )
-                                                                                        : field.onChange(
-                                                                                              field.value?.filter(
-                                                                                                  (
-                                                                                                      value
-                                                                                                  ) =>
-                                                                                                      value !==
-                                                                                                      item.id
-                                                                                              )
-                                                                                          );
-                                                                                }}
-                                                                                disabled={
-                                                                                    item.id ===
-                                                                                    "detach"
-                                                                                }
-                                                                            />
-                                                                        </FormControl>
-                                                                        <FormLabel className="font-normal">
-                                                                            {
-                                                                                item.label
-                                                                            }
-                                                                        </FormLabel>
-                                                                    </FormItem>
-                                                                );
-                                                            }}
-                                                        />
-                                                    ))}
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
                                     </section>
                                 </LocalTabs>
+                                <Button className="w-full" type="submit">Crear Contenedor</Button>
                             </form>
                         </Form>
                     </div>
@@ -611,38 +469,30 @@ const items = [
 
 function LocalTabs({children}: {children: React.ReactNode[]}) {
     return (
-        <Tabs defaultValue="general" className="">
+        <Tabs defaultValue="general" className="w-full">
             <h3 className="text-2xl font-semibold mb-4 text-center">
                 Crear Contenedor
             </h3>
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="general">General Settings</TabsTrigger>
-                <TabsTrigger value="advanced">Avanced</TabsTrigger>
+                <TabsTrigger value="advanced">Advanced</TabsTrigger>
             </TabsList>
             <TabsContent value="general">
                 <Card>
                     <CardHeader>
-                        {/* <CardTitle>General</CardTitle> */}
-                        <CardDescription></CardDescription>
+                        <CardDescription>Configuración general del contenedor</CardDescription>
                     </CardHeader>
-                    <CardContent className="">{children[0]}</CardContent>
-                    <CardFooter>
-                        <Button type='submit'>Crear Contenedor</Button>
-                    </CardFooter>
+                    <CardContent>{children[0]}</CardContent>
                 </Card>
             </TabsContent>
             <TabsContent value="advanced">
                 <Card>
                     <CardHeader>
-                        {/* <CardTitle>Avanced</CardTitle> */}
                         <CardDescription>
                             Configura ajustes avanzados para el contenedor.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="">{children[1]}</CardContent>
-                    <CardFooter>
-                        <Button type='submit'>Crear Contenedor</Button>
-                    </CardFooter>
+                    <CardContent>{children[1]}</CardContent>
                 </Card>
             </TabsContent>
         </Tabs>

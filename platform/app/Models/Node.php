@@ -20,6 +20,13 @@ class Node extends Model
     protected $casts = [
         'attributes' => 'json',
     ];
+    // Append isOnline attribute to the model
+    protected $appends = ['isOnline'];
+
+    public function getIsOnlineAttribute(): bool
+    {
+        return $this->isOnline();
+    }
 
     /**
      * The users that belong to the node.

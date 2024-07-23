@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Events\ContainerProcessed;
 use App\Events\SendCreateContainer;
+use App\Http\Requests\StoreContainerRequest;
 use App\Models\Container;
 use App\Models\Node;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Log;
@@ -39,42 +41,35 @@ class ContainerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+
+    public function store(StoreContainerRequest $request)
     {
+        $validated = $request->validated();
 
-        //TODO: Create a proper requeste
-        //Realizar la validación aparte y enviar los errores correspondientes.
-        $validated = $request->validate([
-            'node' => 'required|uuid',
-            'name' => 'required',
-            'image' => 'required',
-            'attributes' => 'required',
-        ]);
+        DB::transaction(function () use ($validated) {
+            $container = Container::create([
+                'name' => $validated['name'],
+                'image' => $validated['image'],
+                'node_id' => $validated['node'],
+                'attributes' => $validated['attributes'],
+                'state' => 'send',
+                'verified' => false,
+            ]);
 
-        $container = new Container();
-        $container->name = $validated['name'];
-        $container->image = $validated['image'];
-        $container->node_id = $validated['node'];
-        $container->attributes = $validated['attributes'];
-        $container->state = "send";
-        $container->verified = False;
-        $container->save();
-        ContainerProcessed::dispatch();
-        try {
+            //ContainerProcessed::dispatch();
+
             SendCreateContainer::dispatch([
+                "node_id" => $validated['node'],
                 "pid" => $container->id,
                 "data" => $container->attributesToArray()
             ], "CREATE:CONTAINER");
-        }
-        catch (\Exception $e) {
-            error_log($e->getMessage());
-            Log::error($e->getMessage());
-            $container->delete();
-            return to_route('containers.show', 00);
+            //TODO: SEND A REDIRECT
+            return Inertia::render('Container/Create', [
+                'success' => 'Post created successfully!',
+                'container_id' => $container->id,
+            ]);
 
-        }
-        return to_route('containers.show', $container);
-
+        });
     }
 
     public function recreate(Container $container): void
@@ -276,7 +271,7 @@ class ContainerController extends Controller
         //Return inertia render and the container
 
         return Inertia::render('Container/Show', [
-            'container' => $container
+            'container' => $container->load('node')
         ]);
 
     }

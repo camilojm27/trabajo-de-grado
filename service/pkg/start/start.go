@@ -78,13 +78,14 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 			killed, err := docker.Kill(ctx, message.Data.ContainerID)
 			services.Response(ctx, client, killed, message.Action, message.PID, err)
 		case "METRICS:CONTAINER":
-			ctxMetrics, _ := context.WithTimeout(ctx, time.Second*30000)
+			ctxMetrics, cancel := context.WithTimeout(ctx, time.Second*30)
+			defer cancel()
 			docker.Stats(ctxMetrics, client, message.Data.ContainerID)
 
 		// ----------------- Host Actions -----------------
 		case "METRICS:HOST":
-			ctxMetrics, _ := context.WithTimeout(ctx, time.Second*30)
-			//defer cancel()
+			ctxMetrics, cancel := context.WithTimeout(ctx, time.Second*30)
+			defer cancel()
 
 			system.HostMetrics(ctxMetrics, client)
 		}

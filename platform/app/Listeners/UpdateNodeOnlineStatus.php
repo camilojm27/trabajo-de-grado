@@ -26,7 +26,11 @@ class UpdateNodeOnlineStatus
     /**
      * Handle user Container events.
      */
-    public function handleContainerProcessed(ContainerMetricsUpdated $event): void {
+    public function handleContainerProcessed(ContainerProcessed $event): void {
+        $this->setOnline($event->node_id);
+    }
+
+    public function handleContainerMetricsUpdated(ContainerMetricsUpdated $event): void {
         $this->setOnline($event->node_id);
     }
 
@@ -40,6 +44,7 @@ class UpdateNodeOnlineStatus
         return [
             NodeMetricsUpdated::class => 'handleNodeMetricsUpdated',
             ContainerProcessed::class => 'handleContainerProcessed',
+            ContainerMetricsUpdated::class => 'handleContainerMetricsUpdated',
         ];
     }
 }

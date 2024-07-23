@@ -150,7 +150,7 @@ class RabbitMQConsumer extends Command
             if ($actionVerb === 'deleted') {
                 $container->delete();
             } else {
-                $container->state = $messageData["data"]["State"]["Status"];
+                $container->state = $messageData["data"]["State"]["Status"]; //TODO: ERROR   Attempt to assign property "state" on null
                 //$container->error = null;
                 $container->attributes = $messageData['data'];
                 $container->verified = true;
@@ -175,9 +175,15 @@ class RabbitMQConsumer extends Command
         //$this->info(json_encode( $messageData, true) );
         $containers = json_decode($messageData['data'], true);
         $node_id = $messageData['node_id'];
-        $containers_to_delete = array_map(function($item) {
-            return $item['Id'];
-        }, $containers);
+        if (is_array($containers)) {
+            $containers_to_delete = array_map(function($item) {
+                return $item['Id'];
+            }, $containers);
+        } else {
+
+            $containers_to_delete = [];
+        }
+
         Container::whereNotIn('container_id', $containers_to_delete)->where('node_id', $node_id)->delete();
         foreach ($containers as $container) {
             $existingContainer = Container::where('container_id', $container["Id"])->first();
@@ -206,7 +212,7 @@ class RabbitMQConsumer extends Command
                 $newContainer->save();
             }
         }
-        ContainerProcessed::dispatch();
+        ContainerProcessed::dispatch($node_id);
 
     }
 }

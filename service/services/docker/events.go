@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/camilojm27/trabajo-de-grado/service/services"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
-	"log"
-	"time"
 )
 
 func SendContainersListBasedOnEventsAndTime(rmqClient *services.RabbitMQClient, ctx context.Context) {
@@ -53,7 +54,7 @@ func SendContainersListBasedOnEventsAndTime(rmqClient *services.RabbitMQClient, 
 			}
 		case err := <-errChan:
 			if errChan != nil {
-				log.Printf("Error receiving event: %v\n", err)
+				log.Fatalln("Error receiving event:", err)
 			}
 		}
 	}

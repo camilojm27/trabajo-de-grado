@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import NetUsage from "@/components/app/NetUsage";
 import { JSX } from "react/jsx-runtime";
+import {Badge} from "@/components/ui/badge";
 
 interface Metrics {
     mem_limit: number;
@@ -92,11 +93,14 @@ export default function Show({ auth, container }: Props) {
                                 {container.container_id}
                             </a>
                             <Separator className="h-5" orientation="vertical" />
-                            <div className="text-gray-500 flex items-center gap-2 dark:text-gray-400">
-                                <span
-                                    className="inline-block w-2 h-2 bg-[#09CE6B] rounded-full animate-ping duration-[5000]" />
-                                Online
-                            </div>
+                            {container.node.isOnline ? (
+                                <Badge className="bg-green-200 text-green-800" variant="outline">
+                                    Online
+                                </Badge>                    ) : (
+                                <Badge className="bg-red-200 text-red-800" variant="outline">
+                                    Offline
+                                </Badge>
+                            )}
                         </div>
                     </div>
                     <div className="grid gap-6 max-w-6xl w-full mx-auto">
