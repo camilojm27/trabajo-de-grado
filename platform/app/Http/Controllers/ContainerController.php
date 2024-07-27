@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContainerActions;
+use App\Events\ContainerLogsUpdated;
 use App\Events\ContainerProcessed;
-use App\Events\SendCreateContainer;
+use App\Events\SendActionToNode;
 use App\Http\Requests\StoreContainerRequest;
 use App\Models\Container;
 use App\Models\Node;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -58,11 +61,11 @@ class ContainerController extends Controller
 
             //ContainerProcessed::dispatch();
 
-            SendCreateContainer::dispatch([
+            SendActionToNode::dispatch([
                 "node_id" => $validated['node'],
                 "pid" => $container->id,
                 "data" => $container->attributesToArray()
-            ], "CREATE:CONTAINER");
+            ], ContainerActions::CREATE->value);
             //TODO: SEND A REDIRECT
             return Inertia::render('Container/Create', [
                 'success' => 'Post created successfully!',
@@ -72,11 +75,31 @@ class ContainerController extends Controller
         });
     }
 
+    public function logs(Container $container)
+    {
+        // Primero, intenta obtener de la caché
+        $cachedLogs = Cache::get("container-logs-". $container->container_id);
+        if ($cachedLogs) { // Send null node_id because we don't want the listener to mark the node online status
+            error_log( gettype($cachedLogs) );
+            //event(new ContainerLogsUpdated($cachedLogs, $container->container_id, null));
+            return response()->json(['logs' => $cachedLogs], 200);
+        }
+
+        error_log("Request logs from node");
+
+        SendActionToNode::dispatch([
+            "node_id" => $container->node_id,
+            "pid" => $container->id,
+            "data" => $container->attributesToArray()
+        ], ContainerActions::LOGS->value);
+
+    }
+
     public function recreate(Container $container): void
     {
         //TODO: Make sure we can recreate all containers
         try {
-            SendCreateContainer::dispatch([
+            SendActionToNode::dispatch([
                 "pid" => $container->id,
                 "data" => $container->attributesToArray()
             ], "CREATE:CONTAINER");
@@ -95,7 +118,7 @@ class ContainerController extends Controller
     {
 
         try {
-            SendCreateContainer::dispatch([
+            SendActionToNode::dispatch([
                 "pid" => $container->id,
                 "data" => $container->attributesToArray()
             ], "RESTART:CONTAINER");
@@ -121,7 +144,7 @@ class ContainerController extends Controller
 
         try {
 
-            SendCreateContainer::dispatch([
+            SendActionToNode::dispatch([
                 "pid" => $container->id,
                 "data" => $container->attributesToArray()
             ], "START:CONTAINER");
@@ -151,7 +174,7 @@ class ContainerController extends Controller
 
         try {
 
-            SendCreateContainer::dispatch([
+            SendActionToNode::dispatch([
                 "pid" => $container->id,
                 "data" => $container->attributesToArray()
             ], "STOP:CONTAINER");
@@ -179,7 +202,7 @@ class ContainerController extends Controller
     public function kill(Container $container): RedirectResponse
     {
         try {
-            SendCreateContainer::dispatch([
+            SendActionToNode::dispatch([
                 "pid" => $container->id,
                 "data" => $container->attributesToArray()
             ], "KILL:CONTAINER");
@@ -209,7 +232,7 @@ class ContainerController extends Controller
     {
         try {
 
-            SendCreateContainer::dispatch([
+            SendActionToNode::dispatch([
                 "pid" => $container->id,
                 "data" => $container->attributesToArray()
             ], "PAUSE:CONTAINER");
@@ -238,7 +261,7 @@ class ContainerController extends Controller
     {
         try {
 
-            SendCreateContainer::dispatch([
+            SendActionToNode::dispatch([
                 "pid" => $container->id,
                 "data" => $container->attributesToArray()
             ], "UNPAUSE:CONTAINER");
@@ -310,7 +333,7 @@ class ContainerController extends Controller
     {
         //TODO: If the container has and error and send state delete it without dispatching the event
         try {
-            SendCreateContainer::dispatch([
+            SendActionToNode::dispatch([
                 "pid" => $container->id,
                 "data" => $container->attributesToArray()
             ], "DELETE:CONTAINER");
@@ -337,7 +360,7 @@ class ContainerController extends Controller
 
     public function metrics(Container $container): void
     {
-        SendCreateContainer::dispatch([
+        SendActionToNode::dispatch([
             //TODO: Improve this
             "pid" => 00,
             "node_id" => $container->node_id,

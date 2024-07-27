@@ -7,12 +7,13 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use InvalidArgumentException;
 
-class SendCreateContainer
+class SendActionToNode
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public string $payload;
     public string $routingKey;
+    public string $action;
 
     /**
      * Create a new event instance.

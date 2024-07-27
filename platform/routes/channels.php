@@ -14,3 +14,7 @@ Broadcast::channel('node-metrics-{node_id}', function ($node_id) {
 Broadcast::channel('container-metrics-{container_id}', function ($container_id) {
     return true;
 });
+
+Broadcast::channel('container-logs-{container_id}', function ($container_id) {
+    return true;
+});

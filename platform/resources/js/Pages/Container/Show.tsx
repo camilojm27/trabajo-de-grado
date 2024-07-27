@@ -1,16 +1,13 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
-import { User } from "@/types";
-import { Container } from '@/types/container';
-import { SVGProps, useEffect, useState } from "react";
-import axios from "axios";
-import CpuUsage from "@/components/app/CpuUsage";
-import RamUsage from "@/components/app/RamUsage";
-import { Link } from "@inertiajs/react";
-import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import NetUsage from "@/components/app/NetUsage";
-import { JSX } from "react/jsx-runtime";
+import {User} from "@/types";
+import {SVGProps, useEffect, useRef, useState} from "react";
+import {Link} from "@inertiajs/react";
+import {Separator} from "@/components/ui/separator";
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
+import {JSX} from "react/jsx-runtime";
 import {Badge} from "@/components/ui/badge";
+import ContainerMetrics from "@/components/app/ContainerMetrics";
+import ContainerLogs from "@/components/app/ContainerLogs";
 
 interface Metrics {
     mem_limit: number;
@@ -27,35 +24,9 @@ interface Props {
     container: any;
 }
 
-export default function Show({ auth, container }: Props) {
-    console.log(container);
-    const [metrics, setMetrics] = useState<Metrics>({
-        mem_limit: 0,
-        mem_free: 0,
-        cpu_percent: 0,
-        net_input: 0,
-        net_output: 0,
-    });
+export default function Show({auth, container}: Props) {
+    console.log(container.container_id);
 
-    useEffect(() => {
-        axios.post(`/containers/metrics/${container.id}`)
-            .then(response => console.log('Metrics sent:', response))
-            .catch(error => console.error('Error sending metrics:', error));
-    }, []);
-
-    useEffect(() => {
-        // @ts-ignore
-        window.Echo.private(`container-metrics-${container.container_id}`)
-            .listen('ContainerMetricsUpdated', (data: { metrics: Metrics }) => {
-                console.table(data.metrics)
-                setMetrics(data.metrics);
-            });
-
-        return () => {
-            // @ts-ignore
-            window.Echo.leave(`container-metrics-${container.id}`);
-        };
-    }, []);
 
     return (
         <AuthenticatedLayout
@@ -64,7 +35,7 @@ export default function Show({ auth, container }: Props) {
                 <Link
                     className="flex items-center gap-2 text-lg font-semibold sm:text-base mr-4"
                     href="#">
-                    <ServerIcon className="w-6 h-6" />
+                    <ServerIcon className="w-6 h-6"/>
                     <span className="sr-only">Server Dashboard</span>
                 </Link>
                 <nav
@@ -92,11 +63,11 @@ export default function Show({ auth, container }: Props) {
                             <a className="font-medium" href="#" target="_blank">
                                 {container.container_id}
                             </a>
-                            <Separator className="h-5" orientation="vertical" />
+                            <Separator className="h-5" orientation="vertical"/>
                             {container.node.isOnline ? (
                                 <Badge className="bg-green-200 text-green-800" variant="outline">
                                     Online
-                                </Badge>                    ) : (
+                                </Badge>) : (
                                 <Badge className="bg-red-200 text-red-800" variant="outline">
                                     Offline
                                 </Badge>
@@ -160,44 +131,10 @@ export default function Show({ auth, container }: Props) {
                         </Card>
                     </div>
                     <div className="grid gap-6 max-w-6xl w-full mx-auto lg:grid-cols-2">
-                        <Card className="relative overflow-hidden">
-                            <CardHeader className="flex flex-row items-center border-b">
-                                <CardTitle>RAM Usage</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                <RamUsage data={
-                                    {
-                                        mem_total: metrics.mem_limit,
-                                        mem_available: metrics.mem_limit - metrics.mem_free,
-                                        swap_total: 0,
-                                        swap_used: 0,
-                                    }
-                                } /> </CardContent>
-                        </Card>
-                        <Card className="relative overflow-hidden">
-                            <CardHeader className="flex flex-row items-center border-b">
-                                <CardTitle>CPU Load</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                <CpuUsage cpuUsage={metrics.cpu_percent} />
-                            </CardContent>
-                        </Card>
-                        <Card className="relative overflow-hidden">
-                            <CardHeader className="flex flex-row items-center border-b">
-                                <CardTitle>Networks</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                <NetUsage data={
-                                    {
-                                        bytesSent: metrics.net_input,
-                                        bytesRecv: metrics.net_output,
-                                    }
-                                } />
-                            </CardContent>
-                            <CardFooter
-                                className="pb-4 px-6 justify-center bg-gradient-to-b from-background/50 to-background absolute inset-x-0 bottom-0">
-                            </CardFooter>
-                        </Card>
+
+                        <ContainerMetrics container={container} />
+                        <ContainerLogs container={container} />
+
                         <Card className="relative overflow-hidden">
                             <CardHeader className="flex flex-row items-center border-b">
                                 <CardTitle>Operating System Information</CardTitle>
@@ -212,7 +149,6 @@ export default function Show({ auth, container }: Props) {
         </AuthenticatedLayout>
     );
 }
-
 
 
 function ServerIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {

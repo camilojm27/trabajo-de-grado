@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	jobIsRunningMu sync.Mutex
-	runningJobs    = make(map[string]bool)
+	jobStatusMutex sync.Mutex
+	activeStats    = make(map[string]bool)
 	// Variables to store previous network stats
 	prevNetworkInput  uint64
 	prevNetworkOutput uint64
@@ -60,17 +60,17 @@ func Stats(ctx context.Context, rclient *services.RabbitMQClient, containerID st
 	nodeId := ctx.Value("nodeId").(string)
 
 	fmt.Println("Host Metrics called")
-	jobIsRunningMu.Lock()
-	defer jobIsRunningMu.Unlock()
+	jobStatusMutex.Lock()
+	defer jobStatusMutex.Unlock()
 
-	if !runningJobs[containerID] {
-		runningJobs[containerID] = true
+	if !activeStats[containerID] {
+		activeStats[containerID] = true
 
 		go func() {
 			defer func() {
-				jobIsRunningMu.Lock()
-				delete(runningJobs, containerID)
-				jobIsRunningMu.Unlock()
+				jobStatusMutex.Lock()
+				delete(activeStats, containerID)
+				jobStatusMutex.Unlock()
 			}()
 
 			fmt.Println("----------------- Container Metrics -----------------")
@@ -139,23 +139,24 @@ func Stats(ctx context.Context, rclient *services.RabbitMQClient, containerID st
 				jsonDataBytes, err := json.Marshal(sendstats)
 				if err != nil {
 					log.Printf("Error marshalling stats for container %s: %v", containerID, err)
-					jobIsRunningMu.Lock()
-					delete(runningJobs, containerID)
-					jobIsRunningMu.Unlock()
+					jobStatusMutex.Lock()
+					delete(activeStats, containerID)
+					jobStatusMutex.Unlock()
 					stats.Body.Close()
 					return
 				}
 
 				sendMetrics(ctx, rclient, jsonDataBytes)
 			}
+			ctx.Done() // If the context is done, the stats will be closed
 
 			select {
 			default:
 
 			case <-ctx.Done():
-				jobIsRunningMu.Lock()
-				delete(runningJobs, containerID)
-				jobIsRunningMu.Unlock()
+				jobStatusMutex.Lock()
+				delete(activeStats, containerID)
+				jobStatusMutex.Unlock()
 				stats.Body.Close()
 				return
 			}
@@ -179,5 +180,5 @@ func sendMetrics(ctx context.Context, client *services.RabbitMQClient, jsonDataB
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Printf("Response sent for %v\n", string(jsonDataBytes))
+	//fmt.Printf("Response sent for %v\n", string(jsonDataBytes))
 }

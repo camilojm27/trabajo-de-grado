@@ -2,10 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Events\ContainerLogsUpdated;
 use App\Events\ContainerMetricsUpdated;
 use App\Events\NodeMetricsUpdated;
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use PhpAmqpLib\Channel\AbstractChannel;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -55,13 +57,15 @@ class ConsumeMetrics extends Command
 
     private function setupQueue(): void
     {
-        $this->channel->queue_declare('metrics', false, false, false, false);
+        $this->channel->queue_declare('host-metrics', false, false, false, false);
         $this->channel->queue_declare('containers-metrics', false, false, false, false);
+        $this->channel->queue_declare('containers-logs', false, false, false, false);
+
     }
 
     private function consumeMessages(): void
     {
-        $primaryCallback = function ($message) {
+        $nodeMetricsCallback = function ($message) {
             try {
                 $this->processHostsMetrics($message);
             } catch (Exception $e) {
@@ -69,7 +73,7 @@ class ConsumeMetrics extends Command
             }
         };
 
-        $secondaryCallback = function ($message) {
+        $containerMetricsCallback = function ($message) {
             try {
                 $this->processContainersMetrics($message);
             } catch (Exception $e) {
@@ -77,8 +81,17 @@ class ConsumeMetrics extends Command
             }
         };
 
-        $this->channel->basic_consume('metrics', '', false, true, false, false, $primaryCallback);
-        $this->channel->basic_consume('containers-metrics', '', false, true, false, false, $secondaryCallback);
+        $containerLogsCallback = function ($message) {
+            try {
+                $this->processContainersLogs($message);
+            } catch (Exception $e) {
+                $this->error($e->getMessage());
+            }
+        };
+
+        $this->channel->basic_consume('host-metrics', '', false, true, false, false, $nodeMetricsCallback);
+        $this->channel->basic_consume('containers-metrics', '', false, true, false, false, $containerMetricsCallback);
+        $this->channel->basic_consume('containers-logs', '', false, true, false, false, $containerLogsCallback);
 
         while ($this->channel->is_consuming()) {
             $this->info('Waiting for messages...');
@@ -93,5 +106,27 @@ class ConsumeMetrics extends Command
     private function processContainersMetrics($message): void
     {
         event(new ContainerMetricsUpdated(json_decode($message->body, true)));
+    }
+
+    private function processContainersLogs($message): void
+    {
+        $this->warn('Processing container logs');
+        $logs = json_decode($message->body, true);
+        $containerId = $logs["container_id"];
+        $newLogEntry = $logs["logs"];
+
+        $cacheKey = 'container-logs-' . $containerId;
+        $previousLogs = Cache::get($cacheKey, '');
+
+        $updatedLogs = $previousLogs . $newLogEntry;
+
+//        $maxLogSize = 10000000;
+//        if (strlen($updatedLogs) > $maxLogSize) {
+//            $updatedLogs = substr($updatedLogs, -$maxLogSize);
+//        }
+
+
+        Cache::put($cacheKey, $updatedLogs, now()->addMinutes(2));
+        event(new ContainerLogsUpdated($newLogEntry, $containerId, $logs["node_id"]));
     }
 }

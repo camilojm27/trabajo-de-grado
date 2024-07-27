@@ -2,10 +2,10 @@
 
 namespace App\Listeners;
 
+use App\Events\ContainerLogsUpdated;
 use App\Events\ContainerMetricsUpdated;
 use App\Events\ContainerProcessed;
 use App\Events\NodeMetricsUpdated;
-use Auth;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Cache;
 
@@ -19,18 +19,26 @@ class UpdateNodeOnlineStatus
     /**
      * Handle user NodeMetricsEvents events.
      */
-    public function handleNodeMetricsUpdated(NodeMetricsUpdated $event): void {
+    public function handleNodeMetricsUpdated(NodeMetricsUpdated $event): void
+    {
         $this->setOnline($event->node_id);
     }
 
     /**
      * Handle user Container events.
      */
-    public function handleContainerProcessed(ContainerProcessed $event): void {
+    public function handleContainerProcessed(ContainerProcessed $event): void
+    {
         $this->setOnline($event->node_id);
     }
 
-    public function handleContainerMetricsUpdated(ContainerMetricsUpdated $event): void {
+    public function handleContainerMetricsUpdated(ContainerMetricsUpdated $event): void
+    {
+        $this->setOnline($event->node_id);
+    }
+
+    public function handleContainerLogs(ContainerLogsUpdated $event): void
+    {
         $this->setOnline($event->node_id);
     }
 
@@ -45,6 +53,7 @@ class UpdateNodeOnlineStatus
             NodeMetricsUpdated::class => 'handleNodeMetricsUpdated',
             ContainerProcessed::class => 'handleContainerProcessed',
             ContainerMetricsUpdated::class => 'handleContainerMetricsUpdated',
+            ContainerLogsUpdated::class => 'handleContainerLogs',
         ];
     }
 }

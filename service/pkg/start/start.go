@@ -7,10 +7,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/camilojm27/trabajo-de-grado/service/services"
 	"github.com/camilojm27/trabajo-de-grado/service/services/docker"
 	"github.com/camilojm27/trabajo-de-grado/service/services/system"
-
-	"github.com/camilojm27/trabajo-de-grado/service/services"
 	"github.com/camilojm27/trabajo-de-grado/service/types"
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/spf13/cobra"
@@ -78,16 +77,19 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 			killed, err := docker.Kill(ctx, message.Data.ContainerID)
 			services.Response(ctx, client, killed, message.Action, message.PID, err)
 		case "METRICS:CONTAINER":
-			ctxMetrics, cancel := context.WithTimeout(ctx, time.Second*30)
-			defer cancel()
+			ctxMetrics, _ := context.WithTimeout(ctx, time.Second*30)
 			docker.Stats(ctxMetrics, client, message.Data.ContainerID)
+
+		case "LOGS:CONTAINER":
+			ctxLogs, _ := context.WithTimeout(ctx, time.Second*30)
+			docker.Logs(ctxLogs, client, message.Data.ContainerID)
 
 		// ----------------- Host Actions -----------------
 		case "METRICS:HOST":
-			ctxMetrics, cancel := context.WithTimeout(ctx, time.Second*30)
-			defer cancel()
+			ctxHostMetrics, _ := context.WithTimeout(ctx, time.Second*30)
+			system.HostMetrics(ctxHostMetrics, client)
+		case "METRICS:HOST:CPU":
 
-			system.HostMetrics(ctxMetrics, client)
 		}
 
 		d.Ack(true) // Acknowledge the message after successful processing

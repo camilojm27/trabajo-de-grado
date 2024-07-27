@@ -23,19 +23,21 @@ type ContainerRequestData struct {
 }
 
 type ContainerRequestDataAttributes struct {
-    Cmd     string `json:"cmd"`
-    Ports   []PortBinding `json:"ports"`
-    Env     []struct {
-        Name  string `json:"name"`
-        Value string `json:"value"`
-    } `json:"env"`
-    Volumes []string `json:"volumes"`
-    AdvancedBools []string `json:"advanced_bools"` // Fixed typo
+	//TODO: METRICS:HOST
+	//Error parsing JSON: json: cannot unmarshal array into Go struct field ContainerRequest.data of type types.ContainerRequestData
+	Cmd   string        `json:"cmd"`
+	Ports []PortBinding `json:"ports"`
+	Env   []struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	} `json:"env"`
+	Volumes       []string `json:"volumes"`
+	AdvancedBools []string `json:"advanced_bools"` // Fixed typo
 }
 
 type PortBinding struct {
-    HostIP        string `json:"host_ip"`
-    HostPort      string `json:"host_port"`
-    ContainerPort string `json:"container_port"`
-    Protocol      string `json:"protocol"`
+	HostIP        string `json:"host_ip"`
+	HostPort      string `json:"host_port"`
+	ContainerPort string `json:"container_port"`
+	Protocol      string `json:"protocol"`
 }

@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\SendCreateContainer;
+use App\Events\SendActionToNode;
 use App\Http\Requests\StoreNodeRequest;
+use App\Models\Container;
 use App\Models\Node;
 use App\Models\User;
 use Exception;
@@ -119,8 +120,9 @@ class NodeController extends Controller
 
     public function metrics(Node $node): void
     {
-        SendCreateContainer::dispatch([
-            //TODO: Improve this
+        SendActionToNode::dispatch([
+            //TODO: If i dont send the pid, the event is not dispatched, but the pid inside the event is for containers
+            // not for nodes, so i need to change the event to accept a node_id instead of pid
             "pid" => 00,
             "node_id" => $node->id,
             "data" => null

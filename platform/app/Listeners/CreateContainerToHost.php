@@ -2,14 +2,9 @@
 
 namespace App\Listeners;
 
-use App\Events\SendCreateContainer;
-use App\Models\Container;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Log;
+use App\Events\SendActionToNode;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
-use stdClass;
 
 class CreateContainerToHost
 {
@@ -25,7 +20,7 @@ class CreateContainerToHost
      * Handle the event.
      * @throws \Exception
      */
-    public function handle(SendCreateContainer $event): void
+    public function handle(SendActionToNode $event): void
     {
         $connection = new AMQPStreamConnection(
             env('RABBITMQ_HOST'), env('RABBITMQ_PORT', 5672), env('RABBITMQ_LOGIN'), env('RABBITMQ_PASSWORD')
