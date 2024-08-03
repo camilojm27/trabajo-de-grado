@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 
@@ -20,6 +19,7 @@ class Node extends Model
     protected $casts = [
         'attributes' => 'json',
     ];
+
     // Append isOnline attribute to the model
     protected $appends = ['isOnline'];
 
@@ -31,9 +31,9 @@ class Node extends Model
     /**
      * The users that belong to the node.
      */
-    public function users(): BelongsToMany
+    public function users()
     {
-        return $this->belongsToMany(User::class, 'nodes_users');
+        return $this->belongsToMany(User::class, 'nodes_users', 'node_id', 'user_id');
     }
 
     /**
@@ -48,11 +48,12 @@ class Node extends Model
     {
         return $this->hasMany(Container::class);
     }
+
     /**
      * The user that created the node.
      */
     public function isOnline(): bool
     {
-        return Cache::has('node-online-' . $this->id);
+        return Cache::has('node-online-'.$this->id);
     }
 }

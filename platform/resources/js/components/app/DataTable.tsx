@@ -61,7 +61,11 @@ export default function DataTable({columns, data}: {columns: ColumnDef<any>[], d
             columnFilters,
             columnVisibility,
             rowSelection,
-            globalFilter: filtering
+            globalFilter: filtering,
+            pagination: {
+                pageSize: 100,
+                pageIndex: 0,
+            }
         },
         onGlobalFilterChange: setGlobalFilter,
     })

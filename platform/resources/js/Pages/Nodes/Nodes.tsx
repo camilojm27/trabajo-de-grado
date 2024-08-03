@@ -1,81 +1,158 @@
-import { Badge } from "@/components/ui/badge.jsx"
-import { CardHeader, CardContent, Card } from "@/components/ui/card"
+import {Badge} from "@/components/ui/badge.jsx"
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import {Link} from '@inertiajs/react'
+import {Link, router, usePage} from '@inertiajs/react'
 import {User} from "@/types";
 import {Node} from "@/types/node"
-import { NodesColumns } from "./NodesColumns";
-import DataTable from "@/components/app/DataTable";
-import { LayoutGrid, Sheet } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import {File, LayoutGrid, ListFilter, Sheet} from "lucide-react";
+import {Button} from "@/components/ui/button";
+import {useEffect, useState} from "react";
 
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {Tabs, TabsContent, TabsList, TabsTrigger,} from "@/components/ui/tabs"
+import NodesTable from "@/Pages/Nodes/NodesTable";
+import {NodeDetailLateral} from "@/Pages/Nodes/NodeDetailLateral";
+import {NodeStats} from "@/Pages/Nodes/NodeStats";
 
 interface NodesProps {
     auth: {
         user: User
     }
-    nodes: Node[]
+    systemNodes: Node[]
+    allUserNodes: Node[]
+    myNodes: Node[]
+    selectedNode: any
 }
-export default function Nodes({auth, nodes} : NodesProps) {
-    const [showDataTable, setShowDataTable] = useState(false);
-    console.log(nodes);
-    const listItems = nodes.map(node =>
-        <Card key={node.id}>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">{node.name}</h2>
-                    {node.isOnline ? (
-                        <Badge className="bg-green-200 text-green-800" variant="outline">
-                            Online
-                        </Badge>                    ) : (
-                        <Badge className="bg-red-200 text-red-800" variant="outline">
-                            Offline
-                        </Badge>
-                    )}
+export default function Nodes({auth, allUserNodes, systemNodes, myNodes, selectedNode} : NodesProps) {
 
-                </div>
-            </CardHeader>
-            <CardContent>
-                <p className="text-sm text-gray-500">Server 3 is currently online and functioning properly.</p>
-                <p className="text-sm text-gray-500 mt-2">ID: {node.id}</p>
-                <br/>
-                <Link href={`/nodes/${node.id}`} className="mt-4 bg-gray-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    View Details
-                </Link>
-            </CardContent>
-        </Card>
-    );
+    const [currentNode, setCurrentNode] = useState(selectedNode);
+    // @ts-ignore
+    const { params: {id} } = usePage().props;
+
+    useEffect(() => {
+        if (id && !currentNode) {
+            handleNodeSelect(id);
+        }
+    }, [id]);
+
+    const handleNodeSelect = (nodeId: any) => {
+        router.visit(`/nodes/${nodeId}`, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['selectedNode'],
+        });
+    };
+
+    useEffect(() => {
+        setCurrentNode(selectedNode);
+    }, [selectedNode]);
+
+
   return (
       <AuthenticatedLayout
           user={auth.user}
-          header={
-              <div className="flex justify-between">
-                  <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                      Nodes
-                  </h2>
-                  {showDataTable ? (
-                      <Button onClick={() => setShowDataTable(false)}>
-                          Vista en Galeria <LayoutGrid />
-                      </Button>
-                  ) : (
-                      <Button onClick={() => setShowDataTable(true)}>
-                          Vista en Tabla <Sheet />
-                      </Button>
-                  )}
-              </div>
-          }
       >
-          <main className="p-4 md:p-6">
-              {showDataTable ? (
-                  <DataTable columns={NodesColumns} data={nodes} />
-              ) : (
-                  <div className="max-w-4xl mx-auto">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {listItems}
+          <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+              <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+                  <NodeStats/>
+                  <Tabs defaultValue="my-nodes">
+                      <div className="flex items-center">
+                          <TabsList>
+                              <TabsTrigger value="system-nodes">System Nodes</TabsTrigger>
+                              <TabsTrigger value="all-nodes">All Nodes</TabsTrigger>
+                              <TabsTrigger value="my-nodes">My Nodes</TabsTrigger>
+                          </TabsList>
+
+                          {/*Filters*/}
+
+                          <div className="ml-auto flex items-center gap-2">
+                              <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                      <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-7 gap-1 text-sm"
+                                      >
+                                          <ListFilter className="h-3.5 w-3.5"/>
+                                          <span className="sr-only sm:not-sr-only">Filter</span>
+                                      </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                      <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                                      <DropdownMenuSeparator/>
+                                      <DropdownMenuCheckboxItem checked>
+                                          Fulfilled
+                                      </DropdownMenuCheckboxItem>
+                                      <DropdownMenuCheckboxItem>
+                                          Declined
+                                      </DropdownMenuCheckboxItem>
+                                      <DropdownMenuCheckboxItem>
+                                          Refunded
+                                      </DropdownMenuCheckboxItem>
+                                  </DropdownMenuContent>
+                              </DropdownMenu>
+                              <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 gap-1 text-sm"
+                              >
+                                  <File className="h-3.5 w-3.5"/>
+                                  <span className="sr-only sm:not-sr-only">Export</span>
+                              </Button>
+                          </div>
                       </div>
-                  </div>
-              )}
+                      <TabsContent value="system-nodes">
+                          <Card x-chunk="dashboard-05-chunk-3">
+                              <CardHeader className="px-7">
+                                  <CardTitle>Orders</CardTitle>
+                                  <CardDescription>
+                                      Recent orders from your store.
+                                  </CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                  <NodesTable nodes={systemNodes} callback={handleNodeSelect} />
+                              </CardContent>
+                          </Card>
+                      </TabsContent>
+                      <TabsContent value="all-nodes">
+                          <Card x-chunk="dashboard-05-chunk-3">
+                              <CardHeader className="px-7">
+                                  <CardTitle>Orders</CardTitle>
+                                  <CardDescription>
+                                      Recent orders from your store.
+                                  </CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                  <NodesTable nodes={allUserNodes} callback={handleNodeSelect} />
+                              </CardContent>
+                          </Card>
+                      </TabsContent>
+                      <TabsContent value="my-nodes">
+                          <Card x-chunk="dashboard-05-chunk-3">
+                              <CardHeader className="px-7">
+                                  <CardTitle>Orders</CardTitle>
+                                  <CardDescription>
+                                      Recent orders from your store.
+                                  </CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                  <NodesTable nodes={myNodes} callback={handleNodeSelect} />
+                              </CardContent>
+                          </Card>
+                      </TabsContent>
+
+                  </Tabs>
+              </div>
+              <div>
+                  <NodeDetailLateral node={selectedNode} />
+              </div>
           </main>
       </AuthenticatedLayout>
   );

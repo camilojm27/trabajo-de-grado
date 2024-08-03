@@ -1,14 +1,13 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContainerController;
 use App\Http\Controllers\NodeController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Statistics;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
-
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -24,7 +23,7 @@ Route::get('/', function () {
 Route::get('/containers', [ContainerController::class, 'index'])->middleware(['auth', 'verified'])->name('containers');
 Route::get('/containers/create', [ContainerController::class, 'create'])->middleware(['auth', 'verified'])->name('containers.create');
 Route::post('/containers/store', [ContainerController::class, 'store'])->middleware(['auth', 'verified'])->name('containers.store');
-Route::get('/containers/show/{container}', [ContainerController::class, 'show'])->middleware(['auth', 'verified'])->name('containers.show');;
+Route::get('/containers/show/{container}', [ContainerController::class, 'show'])->middleware(['auth', 'verified'])->name('containers.show');
 Route::get('/containers/{node}', [ContainerController::class, 'showNode'])->middleware(['auth', 'verified'])->name('containers.node');
 
 // -------------- Containers Actions ----------------
@@ -37,7 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/containers/pause/{container}', [ContainerController::class, 'pause']);
     Route::post('/containers/unpause/{container}', [ContainerController::class, 'unpause']);
     Route::post('/containers/delete/{container}', [ContainerController::class, 'destroy']);
-// -------------- Containers Realtime Actions ----------------
+    // -------------- Containers Realtime Actions ----------------
 
     Route::post('/containers/metrics/{container}', [ContainerController::class, 'metrics']);
     Route::post('/containers/logs/{container}', [ContainerController::class, 'logs']);
@@ -46,14 +45,15 @@ Route::middleware('auth')->group(function () {
 // -------------- Node Actions ----------------
 Route::middleware('auth')->group(function () {
     Route::post('/nodes/metrics/{node}', [NodeController::class, 'metrics']);
+    Route::post('/nodes/{node}/users', [NodeController::class, 'addUserToNode']);
 });
 
 //Route::get('/config', [ConfigurationController::class, 'edit'])->middleware(['auth', 'verified'])->name('config.edit');
-Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [Statistics::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/nodes', [NodeController::class, 'index'])->middleware(['auth', 'verified'])->name('nodes');
+Route::get('/nodes/{id?}', [NodeController::class, 'index'])->middleware(['auth', 'verified'])->name('nodes');
 
-Route::get('/nodes/{node}', [NodeController::class, 'show'])->middleware(['auth', 'verified'])->name('nodeDetail');
+Route::get('/nodes/show/{node}', [NodeController::class, 'show'])->middleware(['auth', 'verified'])->name('nodeDetail');
 
 // Laravel Routes
 // The Email Verification Notice
@@ -78,11 +78,10 @@ Route::post('/email/verification-notification', function (Request $request) {
     );
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
-
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

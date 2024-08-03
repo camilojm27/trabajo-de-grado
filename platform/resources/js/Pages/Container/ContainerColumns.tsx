@@ -1,31 +1,25 @@
 import {ColumnDef} from "@tanstack/react-table";
 import {Checkbox} from "@/components/ui/checkbox";
 import {Button} from "@/components/ui/button";
-import {ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal} from "lucide-react";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel, DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import {ArrowDown, ArrowUp, ArrowUpDown} from "lucide-react";
 import {Container} from "@/types/container";
-import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible";
 import {Link, router} from "@inertiajs/react";
 import {
-    ReloadIcon,
-    ResumeIcon,
-    PauseIcon,
-    StopIcon,
-    PlayIcon,
-    ResetIcon,
+    EyeOpenIcon,
     HobbyKnifeIcon,
-    TrashIcon,
-    EyeOpenIcon
+    PauseIcon,
+    PlayIcon,
+    ReloadIcon,
+    ResetIcon,
+    ResumeIcon,
+    StopIcon,
+    TrashIcon
 } from '@radix-ui/react-icons'
-import React, { MouseEvent } from "react";
+import React from "react";
 import {useToast} from "@/components/ui/use-toast";
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 
+// @ts-ignore
 export const ContainerColumns: ColumnDef<Container>[] = [
     {
         id: "select",
@@ -94,8 +88,8 @@ export const ContainerColumns: ColumnDef<Container>[] = [
                 </div>
             );
         },
-        cell: ({ row }) => (
-            <div className="lowercase">{row.getValue("image")}</div>
+        cell: ({ row }) => ( // @ts-ignore
+            <div className="lowercase">{row.getValue("image").substring(0,40)}...</div>
         ),
     },
     {
@@ -185,45 +179,45 @@ export const ContainerColumns: ColumnDef<Container>[] = [
             </div>
         ),
     },
-    {
-        accessorKey: "Ports",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Ports
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => (
-            <Collapsible className="lowercase">
-                {
-                    //console.log(row.original.attributes)
-                    row.original.attributes.Ports?.map((port, index) => (
-                        // if (index === 0) return <div key={port.PrivatePort} className="capitalize">Ports:</div>
-                        <div key={index}>
-                            {index < 1 ? (
-                                <CollapsibleTrigger>
-                                    {port.PrivatePort}:{port.PublicPort}/
-                                    {port.Type}
-                                </CollapsibleTrigger>
-                            ) : (
-                                <CollapsibleContent>
-                                    {port.PrivatePort}:{port.PublicPort}/
-                                    {port.Type}
-                                </CollapsibleContent>
-                            )}
-                        </div>
-                    ))
-                }
-            </Collapsible>
-        ),
-    },
+    // {
+    //     accessorKey: "Ports",
+    //     header: ({ column }) => {
+    //         return (
+    //             <Button
+    //                 variant="ghost"
+    //                 onClick={() =>
+    //                     column.toggleSorting(column.getIsSorted() === "asc")
+    //                 }
+    //             >
+    //                 Ports
+    //                 <ArrowUpDown className="ml-2 h-4 w-4" />
+    //             </Button>
+    //         );
+    //     },
+    //     cell: ({ row }) => (
+    //         <Collapsible className="lowercase">
+    //             {
+    //                 //console.log(row.original.attributes)
+    //                 row.original.attributes.Ports?.map((port, index) => (
+    //                     // if (index === 0) return <div key={port.PrivatePort} className="capitalize">Ports:</div>
+    //                     <div key={index}>
+    //                         {index < 1 ? (
+    //                             <CollapsibleTrigger>
+    //                                 {port.PrivatePort}:{port.PublicPort}/
+    //                                 {port.Type}
+    //                             </CollapsibleTrigger>
+    //                         ) : (
+    //                             <CollapsibleContent>
+    //                                 {port.PrivatePort}:{port.PublicPort}/
+    //                                 {port.Type}
+    //                             </CollapsibleContent>
+    //                         )}
+    //                     </div>
+    //                 ))
+    //             }
+    //         </Collapsible>
+    //     ),
+    // },
 
     {
         id: "actions",
@@ -255,140 +249,82 @@ export const ContainerColumns: ColumnDef<Container>[] = [
                 }
             };
 
-            function sendOrderToContainer(order: string) {
-                return (e: MouseEvent) =>
-                    router.post(
-                        `/containers/${order}/` + container.id,
-                        {},
-                        {
-                            onSuccess: (e) => {
-                                if (e) {
-                                    console.log(e);
-                                }
-                                toast({
-                                    title: `${order} send`,
-                                    description: (
-                                        <span className="text-white"></span>
-                                    ),
-                                });
-                            },
-                            onError: (e) => {
-                                toast({
-                                    title: "Container send",
-                                    variant: "destructive",
-                                    description: (
-                                        <span className="text-white">
-                                            Error sending {order} order to
-                                            container verify the rabbitmq server
-                                            is running
-                                        </span>
-                                    ),
-                                });
-                            },
-                        }
-                    );
-            }
+            const sendOrderToContainer = (order: string) => () => {
+                router.post(
+                    `/containers/${order}/${container.id}`,
+                    {},
+                    {
+                        onSuccess: () => {
+                            toast({
+                                title: `${order} sent`,
+                                description: <span className="text-white"></span>,
+                            });
+                        },
+                        onError: () => {
+                            toast({
+                                title: "Container send",
+                                variant: "destructive",
+                                description: (
+                                    <span className="text-white">
+                  Error sending {order} order to container.
+                  Verify the RabbitMQ server is running.
+                </span>
+                                ),
+                            });
+                        },
+                    }
+                );
+            };
+
+            // @ts-ignore
+            const ActionButton = ({ action, icon, tooltip }) => (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                disabled={isItemDisabled(action)}
+                                onClick={sendOrderToContainer(action)}
+                            >
+                                {icon}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{tooltip}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            );
 
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
+                <div className="flex flex-wrap gap-2">
+                    {/*<Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(container.container_id)}>*/}
+                    {/*    Copy Node ID*/}
+                    {/*</Button>*/}
+                    {/*<Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(String(container.id))}>*/}
+                    {/*    Copy Platform ID*/}
+                    {/*</Button>*/}
+                    <Link href={`/containers/show/${container.id}`}>
+                        <Button variant="outline" size="sm">
+                            <EyeOpenIcon className="mr-2 h-4 w-4" />
+                            View
                         </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onClick={() =>
-                                navigator.clipboard.writeText(
-                                    container.container_id
-                                )
-                            }
-                        >
-                            Copy Container ID (Node)
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() =>
-                                navigator.clipboard.writeText(
-                                    String(container.id)
-                                )
-                            }
-                        >
-                            Copy payment ID Copy Container ID (Platform)
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <Link href={"/containers/show/" + container.id}>
-                            <DropdownMenuItem className="cursor-pointer">
-                                <EyeOpenIcon className="mr-1" />
-                                View Container
-                            </DropdownMenuItem>
-                        </Link>
-                        <DropdownMenuItem
-                            disabled={isItemDisabled("restart")}
-                            onClick={sendOrderToContainer("restart")}
-                        >
-                            <ReloadIcon className="mr-1" />
-                            Restart Container
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            disabled={isItemDisabled("recreate")}
-                            onClick={sendOrderToContainer("recreate")}
-                        >
-                            <ResetIcon className="mr-1" />
-                            Recreate Container
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            disabled={isItemDisabled("start")}
-                            onClick={sendOrderToContainer("start")}
-                        >
-                            <PlayIcon className="mr-1" />
-                            Start Container
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            disabled={isItemDisabled("stop")}
-                            onClick={sendOrderToContainer("stop")}
-                        >
-                            <StopIcon className="mr-1" />
-                            Stop Container
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            disabled={isItemDisabled("kill")}
-                            onClick={sendOrderToContainer("kill")}
-                        >
-                            <HobbyKnifeIcon className="mr-1" />
-                            Kill Container
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            disabled={isItemDisabled("delete")}
-                            onClick={sendOrderToContainer("delete")}
-                        >
-                            <TrashIcon className="mr-1" />
-                            Delete Container
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            disabled={isItemDisabled("pause")}
-                            onClick={sendOrderToContainer("pause")}
-                        >
-                            <PauseIcon className="mr-1" />
-                            Pause Container
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            disabled={isItemDisabled("unpause")}
-                            onClick={sendOrderToContainer("unpause")}
-                        >
-                            <ResumeIcon className="mr-1" />
-                            Unpause Container
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <Link href={"/nodes/" + container.node_id}>
-                            <DropdownMenuItem className="cursor-pointer">
-                                View Node
-                            </DropdownMenuItem>
-                        </Link>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                    </Link>
+                    <ActionButton action="restart" icon={<ReloadIcon className="h-4 w-4" />} tooltip="Restart Container" />
+                    <ActionButton action="recreate" icon={<ResetIcon className="h-4 w-4" />} tooltip="Recreate Container" />
+                    <ActionButton action="start" icon={<PlayIcon className="h-4 w-4" />} tooltip="Start Container" />
+                    <ActionButton action="stop" icon={<StopIcon className="h-4 w-4" />} tooltip="Stop Container" />
+                    <ActionButton action="kill" icon={<HobbyKnifeIcon className="h-4 w-4" />} tooltip="Kill Container" />
+                    <ActionButton action="delete" icon={<TrashIcon className="h-4 w-4" />} tooltip="Delete Container" />
+                    <ActionButton action="pause" icon={<PauseIcon className="h-4 w-4" />} tooltip="Pause Container" />
+                    <ActionButton action="unpause" icon={<ResumeIcon className="h-4 w-4" />} tooltip="Unpause Container" />
+                    <Link href={`/nodes/${container.node_id}`}>
+                        <Button variant="outline" size="sm">
+                            View Node
+                        </Button>
+                    </Link>
+                </div>
             );
-        },
-    },
+        }}
 ];

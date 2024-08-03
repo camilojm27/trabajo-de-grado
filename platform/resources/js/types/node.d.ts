@@ -1,3 +1,5 @@
+import {User} from "@/types/index";
+
 interface HardwareAttributes {
     cpu: string;
     cores: number;
@@ -43,5 +45,7 @@ export interface Node {
     updated_at: string;
     attributes: Attributes; // Assuming this is a JSON string, you may need to parse it when using the data
     isOnline?: boolean;
+    creator?: User;
+    users?: User[];
 }
 

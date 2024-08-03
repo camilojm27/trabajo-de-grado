@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum HostAction: string
+enum NodeActions: string
 {
     case METRICS_HOST = 'METRICS:HOST';
 }

@@ -11,6 +11,7 @@ use App\Models\Container;
 use App\Models\Node;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -24,9 +25,21 @@ class ContainerController extends Controller
      */
     public function index(): \Inertia\Response
     {
+        // Get the authenticated user
+        $user = Auth::user();
+
+        // Get containers where the user has access to the node or created the node
+        $containers = Container::with('node')
+            ->whereHas('node', function ($query) use ($user) {
+                $query->where('created_by', $user->id)
+                    ->orWhereHas('users', function ($query) use ($user) {
+                        $query->where('user_id', $user->id);
+                    });
+            })
+            ->get();
 
         return Inertia::render('Container/Containers', [
-            'containers' => Container::with('node')->get()
+            'containers' => $containers,
         ]);
     }
 
@@ -44,7 +57,6 @@ class ContainerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-
     public function store(StoreContainerRequest $request)
     {
         $validated = $request->validated();
@@ -80,12 +92,11 @@ class ContainerController extends Controller
         // Primero, intenta obtener de la caché
         $cachedLogs = Cache::get("container-logs-". $container->container_id);
         if ($cachedLogs) { // Send null node_id because we don't want the listener to mark the node online status
-            error_log( gettype($cachedLogs) );
             //event(new ContainerLogsUpdated($cachedLogs, $container->container_id, null));
             return response()->json(['logs' => $cachedLogs], 200);
         }
 
-        error_log("Request logs from node");
+        error_log('Request logs from node');
 
         SendActionToNode::dispatch([
             "node_id" => $container->node_id,

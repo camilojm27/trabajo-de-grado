@@ -1,152 +1,241 @@
-import { useState, PropsWithChildren, ReactNode } from 'react';
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link } from '@inertiajs/react';
-import { User } from '@/types';
-import ModeToggle from "@/components/app/mode-toggle";
+    import {PropsWithChildren, ReactNode, useState} from 'react';
+import {Link, usePage} from '@inertiajs/react';
+import {User} from '@/types';
 import ThemeProvider from "@/components/app/theme-provider";
-import { Toaster } from "@/components/ui/toaster"
+import {Toaster} from "@/components/ui/toaster"
+import {
+    Github,
+    Home,
+    LibraryBig,
+    LineChart,
+    Package,
+    Package2,
+    PanelLeft,
+    Search, Server,
+    Settings,
+    ShoppingCart,
+    Users2,
+} from "lucide-react"
 
+import {Button} from "@/components/ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {Input} from "@/components/ui/input"
+import {Sheet, SheetContent, SheetTrigger} from "@/components/ui/sheet"
+import {Tooltip, TooltipContent, TooltipTrigger, TooltipProvider} from "@/components/ui/tooltip"
+import {Avatar, AvatarFallback} from "@/components/ui/avatar";
+import {User as UserIcon} from "lucide-react";
+import Dropdown from '@/Components/Dropdown';
+import DynamicBreadcrumb from "@/components/app/DynamicBreadcrumb";
+import ModeToggle from "@/components/app/mode-toggle";
 
-export default function Authenticated({ user, header, children }: PropsWithChildren<{ user: User, header?: ReactNode }>) {
-    const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+export default function Authenticated({user, header, children}: PropsWithChildren<{ user: User, header?: ReactNode }>) {
+
+    const isRouteActive = (routeName: string) => {
+        return route().current(routeName);
+    };
 
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <Toaster/>
-
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <nav className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16">
-                        <div className="flex">
-                            <div className="shrink-0 flex items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
-                                </Link>
-                            </div>
-
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink href={route('dashboard')} active={route().current('dashboard')}>
-                                    Dashboard
-                                </NavLink>
-
-                                <NavLink href={route('nodes')} active={route().current('nodes')}>
-                                    Nodos
-                                </NavLink>
-                                <NavLink href={route('containers')} active={route().current('containers')}>
-                                    Containers
-                                </NavLink>
-                            </div>
-                        </div>
-
-                        <div className="hidden sm:flex sm:items-center sm:ms-6">
-                            <ModeToggle/>
-                            <div className="ms-3 relative">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150"
-                                            >
-                                                {user.name}
-
-                                                <svg
-                                                    className="ms-2 -me-0.5 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </Dropdown.Trigger>
-
-                                    <Dropdown.Content>
-                                        <Dropdown.Link href={route('profile.edit')}>Profile</Dropdown.Link>
-                                        {/*<Dropdown.Link href={route('config.edit')}>Settings</Dropdown.Link>*/}
-                                        <Dropdown.Link href={route('logout')} method="post" as="button">
-                                            Log Out
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <div className="-me-2 flex items-center sm:hidden">
-                            <button
-                                onClick={() => setShowingNavigationDropdown((previousState) => !previousState)}
-                                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out"
+            <TooltipProvider>
+                <div className="flex min-h-screen w-full flex-col bg-muted/40">
+                    <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
+                        <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
+                            <a
+                                href="https://github.com/camilojm27/trabajo-de-grado"
+                                target="_blank"
+                                className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
                             >
-                                <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                    <path
-                                        className={!showingNavigationDropdown ? 'inline-flex' : 'hidden'}
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={showingNavigationDropdown ? 'inline-flex' : 'hidden'}
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
-                    <div className="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
-                            Dashboard
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('nodes')} active={route().current('nodes')}>
-                            Nodes
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('containers')} active={route().current('containers')}>
-                            Containers
-                        </ResponsiveNavLink>
-                    </div>
-
-                    <div className="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
-                        <div className="px-4">
-                            <div className="font-medium text-base text-gray-800 dark:text-gray-200">
-                                {user.name}
+                                <Github className="h-4 w-4 transition-all group-hover:scale-110"/>
+                                <span className="sr-only">Project Code</span>
+                            </a>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link
+                                        href={route('dashboard')}
+                                        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${
+                                            isRouteActive('dashboard') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+                                        }`}                                    >
+                                        <Home className="h-5 w-5"/>
+                                        <span className="sr-only">Dashboard</span>
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">Dashboard</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link
+                                        href={route('nodes')}
+                                        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${
+                                            isRouteActive('nodes') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+                                        }`}
+                                    >
+                                        <Server className="h-5 w-5"/>
+                                        <span className="sr-only">Nodes</span>
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">Nodes</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link
+                                        href={route('containers')}
+                                        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${
+                                            isRouteActive('containers') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+                                        }`}                                    >
+                                        <Package className="h-5 w-5"/>
+                                        <span className="sr-only">Containers</span>
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">Containers</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link
+                                        href="#"
+                                        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                                    >
+                                        <Users2 className="h-5 w-5"/>
+                                        <span className="sr-only">Users</span>
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">Users</TooltipContent>
+                            </Tooltip>
+                        </nav>
+                        <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <a
+                                        href="https://camilojm27.github.io/trabajo-de-grado/"
+                                        target="_blank"
+                                        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                                    >
+                                        <LibraryBig  className="h-5 w-5"/>
+                                        <span className="sr-only">Documentation</span>
+                                    </a>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">Documentation</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link
+                                        href="#"
+                                        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                                    >
+                                        <Settings className="h-5 w-5"/>
+                                        <span className="sr-only">Settings</span>
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">Settings</TooltipContent>
+                            </Tooltip>
+                        </nav>
+                    </aside>
+                    <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+                        <header
+                            className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                    <Button size="icon" variant="outline" className="sm:hidden">
+                                        <PanelLeft className="h-5 w-5"/>
+                                        <span className="sr-only">Toggle Menu</span>
+                                    </Button>
+                                </SheetTrigger>
+                                <SheetContent side="left" className="sm:max-w-xs">
+                                    <nav className="grid gap-6 text-lg font-medium">
+                                        <Link
+                                            href="#"
+                                            className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+                                        >
+                                            <Package2 className="h-5 w-5 transition-all group-hover:scale-110"/>
+                                            <span className="sr-only">Acme Inc</span>
+                                        </Link>
+                                        <Link
+                                            href={route('dashboard')}
+                                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                                        >
+                                            <Home className="h-5 w-5"/>
+                                            Dashboard
+                                        </Link>
+                                        <Link
+                                            href={route('nodes')}
+                                            className="flex items-center gap-4 px-2.5 text-foreground"
+                                        >
+                                            <ShoppingCart className="h-5 w-5"/>
+                                            Nodes
+                                        </Link>
+                                        <Link
+                                            href={route('containers')}
+                                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                                        >
+                                            <Package className="h-5 w-5"/>
+                                            Containers
+                                        </Link>
+                                        <Link
+                                            href="#"
+                                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                                        >
+                                            <Users2 className="h-5 w-5"/>
+                                            Users
+                                        </Link>
+                                        <Link
+                                            href="#"
+                                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                                        >
+                                            <LineChart className="h-5 w-5"/>
+                                            Settings
+                                        </Link>
+                                    </nav>
+                                </SheetContent>
+                            </Sheet>
+                            <DynamicBreadcrumb/>
+                            <div className="relative ml-auto flex-1 md:grow-0">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"/>
+                                <Input
+                                    type="search"
+                                    placeholder="Search..."
+                                    className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+                                />
                             </div>
-                            <div className="font-medium text-sm text-gray-500">{user.email}</div>
-                        </div>
-
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>Profile</ResponsiveNavLink>
-                            {/*<ResponsiveNavLink href={route('config.edit')}>Config</ResponsiveNavLink>*/}
-                            <ResponsiveNavLink method="post" href={route('logout')} as="button">
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
+                            <ModeToggle/>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="overflow-hidden rounded-full"
+                                    >
+                                        <Avatar>
+                                            <AvatarFallback>
+                                                <UserIcon/>
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                                    <DropdownMenuSeparator/>
+                                    <DropdownMenuItem>Settings</DropdownMenuItem>
+                                    <DropdownMenuItem>Support</DropdownMenuItem>
+                                    <DropdownMenuSeparator/>
+                                    <DropdownMenuItem>
+                                        <Link href={route('logout')} method="post" as="button">
+                                            Log Out
+                                        </Link>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </header>
+                        {children}
                     </div>
                 </div>
-            </nav>
-
-            {header && (
-                <header className="bg-white dark:bg-gray-800 shadow">
-                    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">{header}</div>
-                </header>
-            )}
-
-            <main>{children}</main>
-        </div>
+            </TooltipProvider>
         </ThemeProvider>
     );
 }

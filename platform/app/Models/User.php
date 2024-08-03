@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+//use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
@@ -50,7 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function nodes()
     {
-        return $this->belongsToMany(Node::class, 'nodes_users');
+        return $this->belongsToMany(Node::class, 'nodes_users', 'user_id', 'node_id');
     }
 
     /**
@@ -60,5 +60,4 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Node::class, 'created_by');
     }
-
 }
