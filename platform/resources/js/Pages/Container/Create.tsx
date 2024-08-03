@@ -112,7 +112,7 @@ const items = [
                 cmd: data.cmd,
                 ports: data.ports,
                 env: data.env,
-                volumes: data.volumes.map(v => `${v.hostPath}:${v.containerPath}`),
+                volumes: data.volumes.map(v => (v.hostPath !== "" && v.containerPath !== "") ? `${v.hostPath}:${v.containerPath}` : ""),
                 advanced_bools: data.advanced_bools,
             },
         }
