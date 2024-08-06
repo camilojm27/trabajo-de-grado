@@ -2,380 +2,153 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ContainerActions;
-use App\Events\ContainerLogsUpdated;
-use App\Events\ContainerProcessed;
-use App\Events\SendActionToNode;
 use App\Http\Requests\StoreContainerRequest;
 use App\Models\Container;
 use App\Models\Node;
+use App\Services\ContainerService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
-use Log;
+use Inertia\Response;
 
 class ContainerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): \Inertia\Response
-    {
-        // Get the authenticated user
-        $user = Auth::user();
+    private $containerService;
 
-        // Get containers where the user has access to the node or created the node
-        $containers = Container::with('node')
-            ->whereHas('node', function ($query) use ($user) {
-                $query->where('created_by', $user->id)
-                    ->orWhereHas('users', function ($query) use ($user) {
-                        $query->where('user_id', $user->id);
-                    });
-            })
-            ->get();
+    public function __construct(ContainerService $containerService)
+    {
+        $this->containerService = $containerService;
+    }
+
+    protected function authorize(string $ability, Container $container): void
+    {
+        if (! auth()->user()->can($ability, $container)) {
+            throw new AuthorizationException('This action is unauthorized.');
+        }
+    }
+
+    public function index(): Response
+    {
+        $containers = $this->containerService->getUserContainers(auth()->user());
 
         return Inertia::render('Container/Containers', [
             'containers' => $containers,
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): \Inertia\Response
+    public function create(): Response
     {
         return Inertia::render('Container/Create', [
-            'nodes' => Node::all()
+            'nodes' => Node::all(), //TODO: Get User Nodes
         ]);
-
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreContainerRequest $request)
+    public function store(StoreContainerRequest $request): Response
     {
-        $validated = $request->validated();
+        $container = $this->containerService->createContainer($request->validated());
 
-        DB::transaction(function () use ($validated) {
-            $container = Container::create([
-                'name' => $validated['name'],
-                'image' => $validated['image'],
-                'node_id' => $validated['node'],
-                'attributes' => $validated['attributes'],
-                'state' => 'send',
-                'verified' => false,
-            ]);
-
-            //ContainerProcessed::dispatch();
-
-            SendActionToNode::dispatch([
-                "node_id" => $validated['node'],
-                "pid" => $container->id,
-                "data" => $container->attributesToArray()
-            ], ContainerActions::CREATE->value);
-            //TODO: SEND A REDIRECT
-            return Inertia::render('Container/Create', [
-                'success' => 'Post created successfully!',
-                'container_id' => $container->id,
-            ]);
-
-        });
+        return Inertia::render('Container/Create', [
+            'success' => 'Container created successfully!',
+            'container_id' => $container->id,
+        ]);
     }
 
-    public function logs(Container $container)
+    public function logs(Container $container): JsonResponse
     {
-        // Primero, intenta obtener de la caché
-        $cachedLogs = Cache::get("container-logs-". $container->container_id);
-        if ($cachedLogs) { // Send null node_id because we don't want the listener to mark the node online status
-            //event(new ContainerLogsUpdated($cachedLogs, $container->container_id, null));
-            return response()->json(['logs' => $cachedLogs], 200);
-        }
+        $this->authorize('view', $container);
+        $logs = $this->containerService->getLogs($container);
 
-        error_log('Request logs from node');
-
-        SendActionToNode::dispatch([
-            "node_id" => $container->node_id,
-            "pid" => $container->id,
-            "data" => $container->attributesToArray()
-        ], ContainerActions::LOGS->value);
-
+        return response()->json(['logs' => $logs]);
     }
 
-    public function recreate(Container $container): void
+    public function recreate(Container $container): JsonResponse
     {
-        //TODO: Make sure we can recreate all containers
-        try {
-            SendActionToNode::dispatch([
-                "pid" => $container->id,
-                "data" => $container->attributesToArray()
-            ], "CREATE:CONTAINER");
-            $container->state = "send";
-            $container->verified = False;
-            $container->save();
-        }
-        catch (\Exception $e) {
-            error_log($e->getMessage());
-            Log::error($e->getMessage());
-            dump($e->getMessage());
-        }
+        $this->authorize('update', $container);
+        $this->containerService->recreateContainer($container);
+
+        return response()->json(['message' => 'Container recreation initiated']);
     }
 
-    public function restart(Container $container)
+    public function restart(Container $container): RedirectResponse
     {
+        $this->authorize('update', $container);
+        $this->containerService->restartContainer($container);
 
-        try {
-            SendActionToNode::dispatch([
-                "pid" => $container->id,
-                "data" => $container->attributesToArray()
-            ], "RESTART:CONTAINER");
-            //TODO: Implement a better way to handle send state
-            $container->state = "send";
-            $container->verified = False;
-            $container->save();
-            //return data to show a toast message
-            return Redirect::back()->with([
-                'title' => 'Container restarted',
-                'description' => 'The container is being restarted.'
-            ], 200);
-        }
-        catch (\Exception $e) {
-            error_log($e->getMessage());
-            Log::error($e->getMessage());
-            dump($e->getMessage());
-        }
+        return redirect()->back()->with('success', 'Container restart initiated');
     }
 
     public function start(Container $container): RedirectResponse
     {
+        $this->authorize('update', $container);
+        $this->containerService->startContainer($container);
 
-        try {
-
-            SendActionToNode::dispatch([
-                "pid" => $container->id,
-                "data" => $container->attributesToArray()
-            ], "START:CONTAINER");
-            $container->state = "send";
-            $container->verified = False;
-            $container->save();
-
-            return Redirect::back()->with([
-                'title' => 'Container Started',
-                'description' => 'The container is being restarted.'
-            ], 200);
-        }
-        catch (\Exception $e) {
-            error_log($e->getMessage());
-            Log::error($e->getMessage());
-            dump($e->getMessage());
-
-            return Redirect::back()->with([
-                'title' => 'Error',
-                'description' => $e->getMessage()
-            ], 500);
-        }
+        return redirect()->back()->with('success', 'Container start initiated');
     }
 
     public function stop(Container $container): RedirectResponse
     {
+        $this->authorize('update', $container);
+        $this->containerService->stopContainer($container);
 
-        try {
-
-            SendActionToNode::dispatch([
-                "pid" => $container->id,
-                "data" => $container->attributesToArray()
-            ], "STOP:CONTAINER");
-            $container->state = "send";
-            $container->verified = False;
-            $container->save();
-
-            return Redirect::back()->with([
-                'title' => 'Container Stopped',
-                'description' => 'The container is being restarted.'
-            ], 200);
-        }
-        catch (\Exception $e) {
-            error_log($e->getMessage());
-            Log::error($e->getMessage());
-            dump($e->getMessage());
-
-            return Redirect::back()->with([
-                'title' => 'Error',
-                'description' => $e->getMessage()
-            ], 500);
-        }
+        return redirect()->back()->with('success', 'Container stop initiated');
     }
 
     public function kill(Container $container): RedirectResponse
     {
-        try {
-            SendActionToNode::dispatch([
-                "pid" => $container->id,
-                "data" => $container->attributesToArray()
-            ], "KILL:CONTAINER");
-            $container->state = "send";
-            $container->verified = False;
-            $container->save();
+        $this->authorize('update', $container);
+        $this->containerService->killContainer($container);
 
-            return Redirect::back()->with([
-                'title' => 'Container Stopped',
-                'description' => 'The container is being restarted.'
-            ], 200);
-
-        }
-        catch (\Exception $e) {
-            error_log($e->getMessage());
-            Log::error($e->getMessage());
-            dump($e->getMessage());
-
-            return Redirect::back()->with([
-                'title' => 'Error',
-                'description' => $e->getMessage()
-            ], 500);
-        }
+        return redirect()->back()->with('success', 'Container kill initiated');
     }
 
     public function pause(Container $container): RedirectResponse
     {
-        try {
+        $this->authorize('update', $container);
+        $this->containerService->pauseContainer($container);
 
-            SendActionToNode::dispatch([
-                "pid" => $container->id,
-                "data" => $container->attributesToArray()
-            ], "PAUSE:CONTAINER");
-            $container->state = "send";
-            $container->verified = False;
-            $container->save();
-
-            return Redirect::back()->with([
-                'title' => 'Container Paused',
-                'description' => 'The container is being restarted.'
-            ], 200);
-        }
-        catch (\Exception $e) {
-            error_log($e->getMessage());
-            Log::error($e->getMessage());
-            dump($e->getMessage());
-
-            return Redirect::back()->with([
-                'title' => 'Error',
-                'description' => $e->getMessage()
-            ], 500);
-        }
+        return redirect()->back()->with('success', 'Container pause initiated');
     }
 
     public function unpause(Container $container): RedirectResponse
     {
-        try {
+        $this->authorize('update', $container);
+        $this->containerService->unpauseContainer($container);
 
-            SendActionToNode::dispatch([
-                "pid" => $container->id,
-                "data" => $container->attributesToArray()
-            ], "UNPAUSE:CONTAINER");
-            $container->state = "send";
-            $container->verified = False;
-            $container->save();
-
-            return Redirect::back()->with([
-                'title' => 'Container UnPaused',
-                'description' => 'The container is being restarted.'
-            ], 200);
-        }
-        catch (\Exception $e) {
-            error_log($e->getMessage());
-            Log::error($e->getMessage());
-            dump($e->getMessage());
-
-            return Redirect::back()->with([
-                'title' => 'Error',
-                'description' => $e->getMessage()
-            ], 500);
-        }
+        return redirect()->back()->with('success', 'Container unpause initiated');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Container $container): \Inertia\Response
+    public function show(Container $container): Response
     {
-        //Return inertia render and the container
+        $this->authorize('view', $container);
 
         return Inertia::render('Container/Show', [
-            'container' => $container->load('node')
+            'container' => $container->load('node'),
         ]);
-
     }
 
-
-    /**
-     * Display the specified resource.
-     */
-    public function showNode(Node $node): \Inertia\Response
+    public function showNode(Node $node): Response
     {
+        $containers = $node->containers;
+
         return Inertia::render('Container/Containers', [
-            'containers' => Container::where('node_id', $node->id)->get()
+            'containers' => $containers,
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Container $container)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Container $container)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Container $container): RedirectResponse
     {
-        //TODO: If the container has and error and send state delete it without dispatching the event
-        try {
-            SendActionToNode::dispatch([
-                "pid" => $container->id,
-                "data" => $container->attributesToArray()
-            ], "DELETE:CONTAINER");
-            $container->state = "send";
-            $container->verified = False;
-            $container->save();
+        $this->authorize('delete', $container);
+        $this->containerService->deleteContainer($container);
 
-            return Redirect::back()->with([
-                'title' => 'Container Deleted',
-                'description' => 'The container is being restarted.'
-            ], 200);
-        }
-        catch (\Exception $e) {
-            error_log($e->getMessage());
-            Log::error($e->getMessage());
-            dump($e->getMessage());
-
-            return Redirect::back()->with([
-                'title' => 'Error',
-                'description' => $e->getMessage()
-            ], 500);
-        }
+        return redirect()->back()->with('success', 'Container deletion initiated');
     }
 
-    public function metrics(Container $container): void
+    public function metrics(Container $container): JsonResponse
     {
-        SendActionToNode::dispatch([
-            //TODO: Improve this
-            "pid" => 00,
-            "node_id" => $container->node_id,
-            "data" => $container->attributesToArray()
-        ], "METRICS:CONTAINER");
+        $this->authorize('view', $container);
+        $metrics = $this->containerService->getMetrics($container);
+
+        return response()->json(['metrics' => $metrics]);
     }
 }
