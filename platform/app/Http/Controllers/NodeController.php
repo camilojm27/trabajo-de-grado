@@ -2,63 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NodeActions;
-use App\Events\SendActionToNode;
 use App\Http\Requests\StoreNodeRequest;
 use App\Models\Node;
-use App\Models\User;
+use App\Services\NodeService;
 use Exception;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
-use Symfony\Component\HttpFoundation\Response;
+use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class NodeController extends Controller
 {
-    private function getAllUserNodes(): Collection
+    private $nodeService;
+
+    public function __construct(NodeService $nodeService)
     {
-        $user = Auth::user();
-
-        $nodes = Node::where('created_by', $user->id)->with('creator') // Get nodes created by the user
-            ->orWhereHas('users', function ($query) use ($user) { // Get nodes the user has access to
-                $query->where('user_id', $user->id);
-            })->get();
-
-        return $nodes;
+        $this->nodeService = $nodeService;
     }
 
-    private function getMyNodes(): Collection
+    protected function authorize(string $ability, Node $node): void
     {
-        $user = Auth::user();
-
-        return Node::where('created_by', $user->id)->with('creator')->get();
+        if (! auth()->user()->can($ability, $node)) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('This action is unauthorized.');
+        }
     }
 
-    private function getSystemNodes(): Collection
+    public function index(Request $request, $id = null): Response
     {
-        //TODO: This check if user is admin
-        return Node::all()->load('creator');
-    }
-
-    /**
-     * Display the listing of Nodes a user has access.
-     */
-    public function index(Request $request, $id = null): \Inertia\Response
-    {
-        $selectedNode = $id ? Node::with('users')->findOrFail($id) : null;
+        $selectedNode = $id ? $this->nodeService->getNode($id) : null;
 
         return Inertia::render('Nodes/Nodes', [
             'auth' => [
                 'user' => $request->user(),
             ],
-            'systemNodes' => [], //$this->getSystemNodes(),
-            'allUserNodes' => $this->getAllUserNodes(),
-            'myNodes' => $this->getMyNodes(),
+            'systemNodes' => $this->nodeService->getSystemNodes(),
+            'allUserNodes' => $this->nodeService->getAllUserNodes(),
+            'myNodes' => $this->nodeService->getMyNodes(),
             'selectedNode' => $selectedNode,
             'params' => [
                 'id' => $id,
@@ -66,41 +48,24 @@ class NodeController extends Controller
         ]);
     }
 
-    public function addUserToNode(Request $request, Node $node)
+    public function addUserToNode(Request $request, Node $node): RedirectResponse
     {
+        $this->authorize('update', $node);
+
         $validated = $request->validate([
             'email' => 'required|email|exists:users,email|not_in:'.$node->users->pluck('email')->implode(','),
         ]);
 
-        $user = User::where('email', $validated['email'])->first();
-        $node->users()->attach($user);
+        $this->nodeService->addUserToNode($node, $validated['email']);
 
-        return back()->with('success', 'User added successfully');
+        return Redirect::back()->with('success', 'User added successfully');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreNodeRequest $request): JsonResponse
     {
-        $validated = $request->validated();
+        $node = $this->nodeService->createNode($request->validated());
 
-        $user = User::where('email', $validated['created_by'])->first();
-
-        if (! $user) {
-            return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $validated['created_by'] = $user->id;
-
-        Log::info('Creating node with data:', $validated);
-
-        $node = Node::create($validated);
-
-        // Associate the creating user with the node
-        $node->users()->attach($user->id);
-
-        return response()->json(['id' => $node->id], Response::HTTP_CREATED);
+        return response()->json(['id' => $node->id], HttpResponse::HTTP_CREATED);
     }
 
     /**
@@ -114,94 +79,21 @@ class NodeController extends Controller
             'node' => $node,
         ]);
     }
-    public function showCredentials(Node $node)
+
+    /**
+     * @throws Exception
+     */
+    public function showCredentials(Node $node): JsonResponse
     {
-        try {
-            // Define las credenciales del nuevo usuario
-            $user = $node->id;
-            $password = Str::password(32, true, true, false, false);
-            $tags = 'None';
-            $rmqhost = env('RABBITMQ_HOST', 'localhost');
-            // Define las credenciales del administrador de RabbitMQ
-            $adminUser = env('RABBITMQ_LOGIN', 'guest');
-            $adminPassword = env('RABBITMQ_PASSWORD', 'guest');
-            $rmqvhost = env('RABBITMQ_VHOST', '/');
+        // $this->authorize('view', $node);
 
-            // Define la URL de la API de RabbitMQ
-            $url = $rmqhost . ':15672/api/users/' . $user;
+        $credentials = $this->nodeService->getNodeCredentials($node);
 
-            // Crea el nuevo usuario
-            $response = Http::withBasicAuth($adminUser, $adminPassword)
-                ->put($url, [
-                    'password' => $password,
-                    'tags' => $tags,
-                ]);
-            if ($response->failed()) {
-                return response()->json(['error' => 'Error creating user'], Response::HTTP_INTERNAL_SERVER_ERROR);
-            }
-            $url = $rmqhost . ':15672/api/permissions/' . urlencode($rmqvhost) . '/' . $user;
-            $response = Http::withBasicAuth($adminUser, $adminPassword)
-                ->put($url, [
-                    'configure' => "^{$user}$",
-                    'write' => '.*',
-                    'read' => '.*'
-                ]);
-            if ($response->failed()) {
-                return response()->json(['error' => 'Error setting permissions'], Response::HTTP_INTERNAL_SERVER_ERROR);
-            } elseif ($response->status() == 201 or $response->status() == 204) {
-                $credentials = [
-                    'RABBITMQ_HOST' => $rmqhost,
-                    'RABBITMQ_PORT' => env('RABBITMQ_PORT', 5672),
-                    'RABBITMQ_LOGIN' => $user,
-                    'RABBITMQ_PASSWORD' => $password,
-                    'RABBITMQ_VHOST' => $rmqvhost,
-                ];
-
-                return response()->json($credentials, Response::HTTP_OK);
-            }
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            error_log($e->getTraceAsString());
-        }
+        return response()->json($credentials, HttpResponse::HTTP_OK);
     }
 
     public function metrics(Node $node): void
     {
-        SendActionToNode::dispatch([
-            //TODO: If i dont send the pid, the event is not dispatched, but the pid inside the event is for containers
-            // not for nodes, so i need to change the event to accept a node_id instead of pid
-            "pid" => 00,
-            "node_id" => $node->id,
-            "data" => null
-        ], "METRICS:HOST");
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Node $node)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Node $node)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Node $node)
-    {
-        ///api/users/bulk-delete
-        /// {"users" : ["user1", "user2", "user3"]}
-    }
-
-    public function exist()
-    {
+        $this->nodeService->getNodeMetrics($node);
     }
 }
