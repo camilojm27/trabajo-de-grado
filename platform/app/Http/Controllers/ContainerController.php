@@ -6,6 +6,7 @@ use App\Http\Requests\StoreContainerRequest;
 use App\Models\Container;
 use App\Models\Node;
 use App\Services\ContainerService;
+use App\Services\ContainerTemplateService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -15,10 +16,12 @@ use Inertia\Response;
 class ContainerController extends Controller
 {
     private $containerService;
+    private $containerTemplateService;
 
-    public function __construct(ContainerService $containerService)
+    public function __construct(ContainerService $containerService, ContainerTemplateService  $containerTemplateService)
     {
         $this->containerService = $containerService;
+        $this->containerTemplateService = $containerTemplateService;
     }
 
     protected function authorize(string $ability, Container $container): void
@@ -39,8 +42,10 @@ class ContainerController extends Controller
 
     public function create(): Response
     {
+        $templates = $this->containerTemplateService->getAllTemplates();
         return Inertia::render('Container/Create', [
             'nodes' => Node::all(), //TODO: Get User Nodes
+            'templates' => $templates,
         ]);
     }
 
@@ -48,9 +53,17 @@ class ContainerController extends Controller
     {
         $container = $this->containerService->createContainer($request->validated());
 
+//        if ($request->input('save_as_template')) {
+//            $this->containerTemplateService->createTemplate($request->input('template_name'), $container->attributesToArray());
+//        }
+
+        $templates = $this->containerTemplateService->getAllTemplates();
+
         return Inertia::render('Container/Create', [
             'success' => 'Container created successfully!',
             'container_id' => $container->id,
+            'nodes' => Node::all(), //TODO: Get User Nodes
+            'templates' => $templates,
         ]);
     }
 

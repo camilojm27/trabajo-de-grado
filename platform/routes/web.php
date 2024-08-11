@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ContainerController;
+use App\Http\Controllers\ContainerTemplateController;
 use App\Http\Controllers\NodeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Statistics;
@@ -41,6 +42,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/containers/metrics/{container}', [ContainerController::class, 'metrics']);
     Route::post('/containers/logs/{container}', [ContainerController::class, 'logs']);
 });
+
+// -------------- Container Templates ----------------
+Route::middleware(['auth'])->group(function () {
+    Route::get('/container-templates', [ContainerTemplateController::class, 'index'])->name('container-templates.index');
+    Route::post('/container-templates', [ContainerTemplateController::class, 'store'])->name('container-templates.store');
+    Route::delete('/container-templates/{id}', [ContainerTemplateController::class, 'destroy'])->name('container-templates.destroy');
+});
+
 
 // -------------- Node Actions ----------------
 Route::middleware('auth')->group(function () {
