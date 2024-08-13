@@ -104,6 +104,7 @@ class NodeService
     public function getNodeMetrics(Node $node): void
     {
         SendActionToNode::dispatch([
+            'pid' => $node->id,
             'node_id' => $node->id,
             'data' => null,
         ], NodeActions::METRICS_HOST->value);

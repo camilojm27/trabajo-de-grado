@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func Response(ctx context.Context, client *RabbitMQClient, payload Payload, action string, platformID uint64, err error) {
+func Response(ctx context.Context, client *RabbitMQClient, payload Payload, action string, platformID string, err error) {
 	var NodeID = viper.GetString("NODE_ID")
 
 	if err != nil {
@@ -60,7 +60,7 @@ type ResponseMsg struct {
 	Action  string  `json:"action"`
 	Data    Payload `json:"data"`
 	Stataus string  `json:"status"`
-	PID     uint64  `json:"pid"`
+	PID     string  `json:"pid"`
 	NodeID  string  `json:"node_id"`
 	Error   string  `json:"error"`
 }

@@ -1,9 +1,14 @@
 package types
 
 type ContainerRequest struct {
-	Action string               `json:"action"`
-	PID    uint64               `json:"pid"`
-	Data   ContainerRequestData `json:"data"`
+	Action string                `json:"action"`
+	PID    string                `json:"pid"`
+	Data   *ContainerRequestData `json:"data,omitempty"`
+}
+
+type HostRequest struct {
+	Action string `json:"action"`
+	PID    string `json:"pid"`
 }
 
 type ContainerRequestData struct {

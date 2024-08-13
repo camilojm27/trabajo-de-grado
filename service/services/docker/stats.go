@@ -106,21 +106,10 @@ func Stats(ctx context.Context, rclient *services.RabbitMQClient, containerID st
 				// Calculate CPU and Memory usage percentages
 				cpuPercent := calculateCPUPercent(statsJSON)
 				memoryPercent := calculateMemoryPercent(statsJSON)
-				fmt.Printf("CPU Usage: %.2f%%\n", cpuPercent)
-				fmt.Printf("Memory Usage: %.2f%%\n", memoryPercent)
 
 				// Calculate network input and output in megabytes
 				netInputMB := calculateNetInput(statsJSON)
 				netOutputMB := calculateNetOutput(statsJSON)
-				fmt.Printf("Network Input: %.2f MB, Network Output: %.2f MB\n", float64(netInputMB), float64(netOutputMB))
-
-				// Print the stats (you can customize this output as needed)
-				fmt.Printf("Container ID: %s\n", containerID)
-				fmt.Printf("CPU Usage: %v\n", statsJSON.CPUStats.CPUUsage)
-				fmt.Printf("Memory Usage: %v / %v\n", statsJSON.MemoryStats.Usage, statsJSON.MemoryStats.Limit)
-				fmt.Printf("Network IO: %v / %v\n", statsJSON.Networks["eth0"].RxBytes, statsJSON.Networks["eth0"].TxBytes)
-				fmt.Printf("PIDs: %d\n", statsJSON.PidsStats.Current)
-				fmt.Println()
 
 				sendstats := ty.Stats{
 					NodeID:      nodeId,

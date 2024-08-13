@@ -92,8 +92,10 @@ class NodeController extends Controller
         return response()->json($credentials, HttpResponse::HTTP_OK);
     }
 
-    public function metrics(Node $node): void
+    public function metrics(Node $node): JsonResponse
     {
         $this->nodeService->getNodeMetrics($node);
+
+        return response()->json([], HttpResponse::HTTP_OK);
     }
 }

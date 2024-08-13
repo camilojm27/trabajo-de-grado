@@ -38,12 +38,13 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 		if err != nil {
 			fmt.Println("Error parsing JSON:", err)
 			if err != nil {
-				log.Panic(err.Error())
+				err := d.Ack(true) //TODO: Acknowledge the message and send the error to the platform, show a toast in the UI
+				if err != nil {
+					log.Panic(err.Error())
+				}
+
 			}
-			err := d.Nack(false, true) // Nack the message with requeue
-			if err != nil {
-				log.Panic(err.Error())
-			}
+
 			return
 		}
 
@@ -87,7 +88,7 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 		// ----------------- Host Actions -----------------
 		case "METRICS:HOST":
 			ctxHostMetrics, _ := context.WithTimeout(ctx, time.Second*30)
-			system.HostMetrics(ctxHostMetrics, client)
+			go system.HostMetrics(ctxHostMetrics, client)
 		case "METRICS:HOST:CPU":
 
 		}

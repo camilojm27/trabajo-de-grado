@@ -69,5 +69,5 @@ func sendContainers(ctx context.Context, rmqClient *services.RabbitMQClient) {
 	if err != nil {
 		log.Println("Error marshalling ContainerList: ", err)
 	}
-	services.Response(ctx, rmqClient, string(jsonData), "LIST:CONTAINERS", 0, err)
+	services.Response(ctx, rmqClient, string(jsonData), "LIST:CONTAINERS", "", err)
 }

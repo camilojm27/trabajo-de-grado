@@ -113,7 +113,7 @@ class ContainerService
         try {
             SendActionToNode::dispatch([
                 'node_id' => $container->node_id,
-                'pid' => $container->id,
+                'pid' => strval($container->id),
                 'data' => $container->attributesToArray(),
             ], $action->value);
         } catch (\Exception $e) {
