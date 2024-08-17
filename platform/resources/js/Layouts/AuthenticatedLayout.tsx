@@ -1,5 +1,5 @@
-    import {PropsWithChildren, ReactNode, useState} from 'react';
-import {Link, usePage} from '@inertiajs/react';
+import {PropsWithChildren, ReactNode} from 'react';
+import {Link} from '@inertiajs/react';
 import {User} from '@/types';
 import ThemeProvider from "@/components/app/theme-provider";
 import {Toaster} from "@/components/ui/toaster"
@@ -11,9 +11,11 @@ import {
     Package,
     Package2,
     PanelLeft,
-    Search, Server,
+    Search,
+    Server,
     Settings,
     ShoppingCart,
+    User as UserIcon,
     Users2,
 } from "lucide-react"
 
@@ -22,16 +24,13 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {Input} from "@/components/ui/input"
 import {Sheet, SheetContent, SheetTrigger} from "@/components/ui/sheet"
-import {Tooltip, TooltipContent, TooltipTrigger, TooltipProvider} from "@/components/ui/tooltip"
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar";
-import {User as UserIcon} from "lucide-react";
-import Dropdown from '@/Components/Dropdown';
 import DynamicBreadcrumb from "@/components/app/DynamicBreadcrumb";
 import ModeToggle from "@/components/app/mode-toggle";
 
@@ -126,7 +125,7 @@ export default function Authenticated({user, header, children}: PropsWithChildre
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Link
-                                        href="#"
+                                        href="/settings/general"
                                         className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
                                     >
                                         <Settings className="h-5 w-5"/>
@@ -219,9 +218,11 @@ export default function Authenticated({user, header, children}: PropsWithChildre
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                                    <DropdownMenuSeparator/>
-                                    <DropdownMenuItem>Settings</DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        <Link href={route('profile.edit')} as="button" className="w-full">
+                                            Profile
+                                        </Link>
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem>Support</DropdownMenuItem>
                                     <DropdownMenuSeparator/>
                                     <DropdownMenuItem>

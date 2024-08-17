@@ -1,3 +1,5 @@
+import {Setting} from "@/types/setting";
+
 export interface User {
     id: number;
     name: string;
@@ -10,3 +12,25 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
         user: User;
     };
 };
+
+interface Link {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface Pagination {
+    current_page: number;
+    data: Setting[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: Link[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}

@@ -10,7 +10,7 @@ import { GeneralSettings } from './GeneralSettings';
 import { AdvancedSettings } from './AdvancedSettings';
 import { LocalTabs } from './LocalTabs';
 import { TemplateSelector } from './TemplateSelector';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {z} from "zod";
 import {Node} from "@/types/node";
@@ -112,8 +112,8 @@ export function CreateContainerForm({ nodes, templates }: CreateContainerFormPro
     // noinspection TypeScriptValidateTypes
     return (
         <>
-            {/*// @ts-ignore*/}
             <Form {...form}>
+                {/*// @ts-ignore*/}
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     <TemplateSelector templates={templates} onSelect={onTemplateSelect} />
                     <LocalTabs>

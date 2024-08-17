@@ -39,7 +39,7 @@ export default function Containers({auth}: ContainersProps) {
             </Link>}
         >
             <main className="p-6 md:p-6 ">
-                <Button variant="link">
+                <Button variant="default">
                     <Link className="w-full" href="/containers/create">Create Container</Link>
                 </Button>
                 <h1 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">Containers Status</h1>

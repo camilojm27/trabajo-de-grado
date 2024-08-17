@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class StoreNodeRequest extends FormRequest
 {
@@ -14,7 +13,8 @@ class StoreNodeRequest extends FormRequest
     public function authorize(): bool
     {
         $request_key = $this->request->get('welcome_key');
-        $welcome_key = DB::table('config')->where('key', '=','welcome_key')->value('value');
+        $welcome_key = DB::table('settings')->where('key', '=', 'welcome_key')->value('value');
+
         return $request_key == $welcome_key;
     }
 
@@ -35,10 +35,11 @@ class StoreNodeRequest extends FormRequest
             'created_by' => 'required|email|exists:users,email',
         ];
     }
+
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'ip_address' => $this->ip()
+            'ip_address' => $this->ip(),
         ]);
     }
 }

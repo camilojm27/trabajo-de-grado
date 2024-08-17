@@ -4,6 +4,7 @@ use App\Http\Controllers\ContainerController;
 use App\Http\Controllers\ContainerTemplateController;
 use App\Http\Controllers\NodeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\Statistics;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -50,14 +51,17 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/container-templates/{id}', [ContainerTemplateController::class, 'destroy'])->name('container-templates.destroy');
 });
 
-
 // -------------- Node Actions ----------------
 Route::middleware('auth')->group(function () {
     Route::post('/nodes/metrics/{node}', [NodeController::class, 'metrics']);
     Route::post('/nodes/{node}/users', [NodeController::class, 'addUserToNode']);
 });
 
-//Route::get('/config', [ConfigurationController::class, 'edit'])->middleware(['auth', 'verified'])->name('config.edit');
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+    Route::get('/settings/general', [SettingController::class, 'index'])->name('settings.general');
+    Route::patch('/settings/action/{id}', [SettingController::class, 'update'])->name('settings.update');
+});
+
 Route::get('/dashboard', [Statistics::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/nodes/{id?}', [NodeController::class, 'index'])->middleware(['auth', 'verified'])->name('nodes');
