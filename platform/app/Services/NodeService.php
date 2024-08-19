@@ -63,7 +63,7 @@ class NodeService
         $user = $node->id;
         $password = Str::password(32, true, true, false, false);
         $tags = 'None';
-        $rmqhost = env('RABBITMQ_HOST', 'localhost');
+        $rmqhost = env('RABBITMQ_HOST', '127.0.0.1');
         $adminUser = env('RABBITMQ_LOGIN', 'guest');
         $adminPassword = env('RABBITMQ_PASSWORD', 'guest');
         $rmqvhost = env('RABBITMQ_VHOST', '/');
@@ -93,7 +93,7 @@ class NodeService
         }
 
         return [
-            'RABBITMQ_HOST' => $rmqhost,
+            'RABBITMQ_HOST' => env('RABBITMQ_PUBLIC_HOST_IP', '127.0.0.1'),
             'RABBITMQ_PORT' => env('RABBITMQ_PORT', 5672),
             'RABBITMQ_LOGIN' => $user,
             'RABBITMQ_PASSWORD' => $password,

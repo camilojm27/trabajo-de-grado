@@ -2,8 +2,9 @@ package services_test
 
 import (
 	"context"
-	"github.com/camilojm27/trabajo-de-grado/service/services/docker"
 	"testing"
+
+	"github.com/camilojm27/trabajo-de-grado/service/services/docker"
 
 	ty "github.com/camilojm27/trabajo-de-grado/service/types"
 )
@@ -15,8 +16,8 @@ func TestCreateDeleteInspectContainer(t *testing.T) {
 
 	data := ty.ContainerRequest{
 		Action: "",
-		PID:    0,
-		Data: ty.ContainerRequestData{
+		PID:    "",
+		Data: &ty.ContainerRequestData{
 			Name:        containerName,
 			Image:       "hello-world",
 			NodeID:      "",
