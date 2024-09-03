@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func RunStartCommand(cmd *cobra.Command, args []string) {
+func RunStartCommand(cmd *cobra.Command, args []string, apiEndpoint string) {
 	fmt.Println("start called")
 	nodeId := viper.GetString("NODE_ID")
 
@@ -84,7 +84,10 @@ func RunStartCommand(cmd *cobra.Command, args []string) {
 		case "LOGS:CONTAINER":
 			ctxLogs, _ := context.WithTimeout(ctx, time.Second*30)
 			docker.Logs(ctxLogs, client, message.Data.ContainerID)
-
+		case "LOG_FILE:CONTAINER":
+			ctxLogFile, _ := context.WithTimeout(ctx, time.Second*30)
+			fmt.Println(&message.Data)
+			docker.LogFile(ctxLogFile, *message.Data, apiEndpoint)
 		// ----------------- Host Actions -----------------
 		case "METRICS:HOST":
 			ctxHostMetrics, _ := context.WithTimeout(ctx, time.Second*30)

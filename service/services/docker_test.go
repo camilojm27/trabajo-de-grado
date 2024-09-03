@@ -32,10 +32,19 @@ func TestCreateDeleteInspectContainer(t *testing.T) {
 		},
 	}
 
+	// Test if a container can be created
+
 	_, err := docker.Create(ctx, data)
 	if err != nil {
 		t.Fatalf("Error al crear el contenedor de prueba: %v", err)
 	}
+
+	// Test if a container can be inspected
+	_, err = docker.Inspect(ctx, containerName)
+	if err != nil {
+		t.Error("El contenedor no se eliminó correctamente")
+	}
+	// Test if a container can be deleted
 
 	_, err = docker.Delete(ctx, containerName)
 
@@ -43,6 +52,7 @@ func TestCreateDeleteInspectContainer(t *testing.T) {
 		t.Errorf("Error al eliminar el contenedor: %v", err)
 	}
 
+	// Test if a container deleted returns an error when inspected
 	_, err = docker.Inspect(ctx, containerName)
 	if err == nil {
 		t.Error("El contenedor no se eliminó correctamente")

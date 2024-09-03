@@ -14,4 +14,5 @@ enum ContainerActions: string
     case KILL = 'KILL:CONTAINER';
     case METRICS = 'METRICS:CONTAINER';
     case LOGS = 'LOGS:CONTAINER';
+    case LOG_FILE = 'LOG_FILE:CONTAINER';
 }

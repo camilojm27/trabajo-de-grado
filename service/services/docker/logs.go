@@ -11,6 +11,7 @@ import (
 	"github.com/camilojm27/trabajo-de-grado/service/services"
 	ty "github.com/camilojm27/trabajo-de-grado/service/types"
 
+	"github.com/camilojm27/trabajo-de-grado/service/pkg/util"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/rabbitmq/amqp091-go"
@@ -25,17 +26,17 @@ func Logs(ctx context.Context, rclient *services.RabbitMQClient, containerID str
 	nodeId := ctx.Value("nodeId").(string)
 
 	fmt.Println("LOGS CALLED")
-	jobStatusMutex.Lock()
-	defer jobStatusMutex.Unlock()
+	logsMutex.Lock()
+	defer logsMutex.Unlock()
 
 	if !runningLogs[containerID] {
 		runningLogs[containerID] = true
 
 		go func() {
 			defer func() {
-				jobStatusMutex.Lock()
+				logsMutex.Lock()
 				delete(runningLogs, containerID)
-				jobStatusMutex.Unlock()
+				logsMutex.Unlock()
 			}()
 			// Create Docker client
 			fmt.Println("LOGS STARTED")
@@ -47,7 +48,7 @@ func Logs(ctx context.Context, rclient *services.RabbitMQClient, containerID str
 			}
 
 			// Get container logs
-			options := container.LogsOptions{ShowStdout: true, ShowStderr: true, Follow: true, Tail: "all"}
+			options := container.LogsOptions{ShowStdout: true, ShowStderr: true, Follow: true, Tail: "1000"}
 			logs, err := cli.ContainerLogs(context.Background(), containerID, options)
 			if err != nil {
 				log.Printf("failed to get logs for container %s: %v", containerID, err)
@@ -79,7 +80,7 @@ func Logs(ctx context.Context, rclient *services.RabbitMQClient, containerID str
 				}
 
 				fmt.Print(string(buffer[:n]))
-				sendLogs.Logs = string(buffer[:n])
+				sendLogs.Logs = util.SafeString(buffer[:n])
 				jsonDataBytes, err := json.Marshal(sendLogs)
 
 				if err != nil {

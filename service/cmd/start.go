@@ -30,7 +30,7 @@ var startCmd = &cobra.Command{
 			log.Fatal("Rabbitmq Configuration is missing, run 'pgc join' to set configuration")
 		}
 
-		start.RunStartCommand(cmd, args)
+		start.RunStartCommand(cmd, args, appUrl)
 
 		// cli, _ := client.NewClientWithOpts(client.FromEnv)
 

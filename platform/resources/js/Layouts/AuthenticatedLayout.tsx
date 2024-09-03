@@ -4,6 +4,7 @@ import {User} from '@/types';
 import ThemeProvider from "@/components/app/theme-provider";
 import {Toaster} from "@/components/ui/toaster"
 import {
+    CirclePlus,
     Github,
     Home,
     LibraryBig,
@@ -11,7 +12,6 @@ import {
     Package,
     Package2,
     PanelLeft,
-    Search,
     Server,
     Settings,
     ShoppingCart,
@@ -27,7 +27,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {Input} from "@/components/ui/input"
 import {Sheet, SheetContent, SheetTrigger} from "@/components/ui/sheet"
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar";
@@ -55,19 +54,22 @@ export default function Authenticated({user, header, children}: PropsWithChildre
                                 <Github className="h-4 w-4 transition-all group-hover:scale-110"/>
                                 <span className="sr-only">Project Code</span>
                             </a>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Link
-                                        href={route('dashboard')}
-                                        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${
-                                            isRouteActive('dashboard') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
-                                        }`}                                    >
-                                        <Home className="h-5 w-5"/>
-                                        <span className="sr-only">Dashboard</span>
-                                    </Link>
-                                </TooltipTrigger>
-                                <TooltipContent side="right">Dashboard</TooltipContent>
-                            </Tooltip>
+                            {
+                                user.is_admin && <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Link
+                                            href={route('dashboard')}
+                                            className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${
+                                                isRouteActive('dashboard') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+                                            }`}>
+                                            <Home className="h-5 w-5"/>
+                                            <span className="sr-only">Dashboard</span>
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right">Dashboard</TooltipContent>
+                                </Tooltip>
+                            }
+
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Link
@@ -88,7 +90,7 @@ export default function Authenticated({user, header, children}: PropsWithChildre
                                         href={route('containers')}
                                         className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${
                                             isRouteActive('containers') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
-                                        }`}                                    >
+                                        }`}>
                                         <Package className="h-5 w-5"/>
                                         <span className="sr-only">Containers</span>
                                     </Link>
@@ -98,15 +100,32 @@ export default function Authenticated({user, header, children}: PropsWithChildre
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Link
-                                        href="#"
-                                        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-                                    >
-                                        <Users2 className="h-5 w-5"/>
-                                        <span className="sr-only">Users</span>
+                                        href={route('containers.create')}
+                                        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${
+                                            isRouteActive('containers.create') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+                                        }`}>
+                                        <CirclePlus className="h-5 w-5"/>
+                                        <span className="sr-only">Add Container</span>
                                     </Link>
                                 </TooltipTrigger>
-                                <TooltipContent side="right">Users</TooltipContent>
+                                <TooltipContent side="right">Add Container</TooltipContent>
                             </Tooltip>
+                            {
+                                user.is_admin && <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Link
+                                            href="/users"
+                                            className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${
+                                                isRouteActive('users.index') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+                                            }`}>
+                                            <Users2 className="h-5 w-5"/>
+                                            <span className="sr-only">Users</span>
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right">Users</TooltipContent>
+                                </Tooltip>
+                            }
+
                         </nav>
                         <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
                             <Tooltip>
@@ -116,24 +135,27 @@ export default function Authenticated({user, header, children}: PropsWithChildre
                                         target="_blank"
                                         className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
                                     >
-                                        <LibraryBig  className="h-5 w-5"/>
+                                        <LibraryBig className="h-5 w-5"/>
                                         <span className="sr-only">Documentation</span>
                                     </a>
                                 </TooltipTrigger>
                                 <TooltipContent side="right">Documentation</TooltipContent>
                             </Tooltip>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Link
-                                        href="/settings/general"
-                                        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-                                    >
-                                        <Settings className="h-5 w-5"/>
-                                        <span className="sr-only">Settings</span>
-                                    </Link>
-                                </TooltipTrigger>
-                                <TooltipContent side="right">Settings</TooltipContent>
-                            </Tooltip>
+                            {
+                                user.is_admin &&
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Link
+                                            href="/settings/general"
+                                            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                                        >
+                                            <Settings className="h-5 w-5"/>
+                                            <span className="sr-only">Settings</span>
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right">Settings</TooltipContent>
+                                </Tooltip>
+                            }
                         </nav>
                     </aside>
                     <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
@@ -195,12 +217,7 @@ export default function Authenticated({user, header, children}: PropsWithChildre
                             </Sheet>
                             <DynamicBreadcrumb/>
                             <div className="relative ml-auto flex-1 md:grow-0">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"/>
-                                <Input
-                                    type="search"
-                                    placeholder="Search..."
-                                    className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-                                />
+
                             </div>
                             <ModeToggle/>
                             <DropdownMenu>

@@ -52,6 +52,13 @@ class ContainerService
         return 'Logs requested. Please check back later.';
     }
 
+    public function requestLogFile(Container $container): void
+    {
+        $hash = Util::generateHashToContainer($container, 'logfile');
+        $data = array_merge(['container_id' => $container->container_id], ['hash' => $hash->hash]);
+        $this->dispatchContainerAction($container, ContainerActions::LOG_FILE, $data);
+    }
+
     public function recreateContainer(Container $container): void
     {
         $this->dispatchContainerAction($container, ContainerActions::CREATE);
@@ -108,13 +115,13 @@ class ContainerService
         return ['message' => 'Metrics requested. Please check back later.'];
     }
 
-    private function dispatchContainerAction(Container $container, ContainerActions $action): void
+    private function dispatchContainerAction(Container $container, ContainerActions $action, ?array $data = null): void
     {
         try {
             SendActionToNode::dispatch([
                 'node_id' => $container->node_id,
                 'pid' => strval($container->id),
-                'data' => $container->attributesToArray(),
+                'data' => $data ?? $container->attributesToArray(),
             ], $action->value);
         } catch (\Exception $e) {
             Log::error("Failed to dispatch container action: {$e->getMessage()}");

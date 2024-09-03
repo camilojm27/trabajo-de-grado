@@ -1,6 +1,6 @@
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
-import {ChevronLeft, ChevronRight, Copy, CreditCard, MoreVertical, Truck} from "lucide-react";
+import {Activity, ChevronLeft, ChevronRight, Copy, MoreVertical} from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -10,9 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {Separator} from "@/components/ui/separator";
 import {Pagination, PaginationContent, PaginationItem} from "@/components/ui/pagination";
-import {User} from "@/types";
 import {Node} from "@/types/node";
-import {useMemo} from "react";
+import React, {useMemo} from "react";
 import {NodeAddUsers} from "@/Pages/Nodes/NodeAddUsers";
 import {Link} from "@inertiajs/react";
 
@@ -20,7 +19,7 @@ interface NodesProps {
     node: Node
 }
 
-export function NodeDetailLateral({node} : NodesProps) {
+export function NodeDetailLateral({node}: NodesProps) {
     if (!node) {
         return null;
     }
@@ -37,7 +36,7 @@ export function NodeDetailLateral({node} : NodesProps) {
             };
         }
     }, [node.attributes]);
-    return(
+    return (
         <Card
             className="overflow-hidden" x-chunk="dashboard-05-chunk-4"
         >
@@ -55,28 +54,34 @@ export function NodeDetailLateral({node} : NodesProps) {
                         </Button>
                     </CardTitle>
                     <CardDescription>Created: {new Date(node.created_at).toLocaleDateString()}</CardDescription>
-                </div>
-                <div className="ml-auto flex items-center gap-1">
-                    <Button variant="link">
-                        <Link className="w-full" href={`/nodes/show/${node.id}`}>Realtime Stats</Link>
-                    </Button>
-                    <NodeAddUsers node={node}></NodeAddUsers>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button size="icon" variant="outline" className="h-8 w-8">
-                                <MoreVertical className="h-3.5 w-3.5"/>
-                                <span className="sr-only">More</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Export</DropdownMenuItem>
-                            <DropdownMenuSeparator/>
-                            <DropdownMenuItem>Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
+                    <div className="ml-auto flex items-center gap-1">
+                        <Button variant="link">
+                            <Link className="w-full inline-flex" href={`/containers/${node.id}`}>
+                                <Activity className="h-4 w-4"/> Node Containers </Link>
+                        </Button>
+                        <Button variant="link">
+                            <Link className="w-full inline-flex" href={`/nodes/show/${node.id}`}>
+                                <Activity className="h-4 w-4"/> Realtime Stats</Link>
+                        </Button>
+                        <NodeAddUsers node={node}></NodeAddUsers>
+                        </div>
+                    </div>
+                    <div className="ml-auto flex items-center gap-1">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button size="icon" variant="outline" className="h-8 w-8">
+                                    <MoreVertical className="h-3.5 w-3.5"/>
+                                    <span className="sr-only">More</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem>Edit</DropdownMenuItem>
+                                <DropdownMenuItem>Export</DropdownMenuItem>
+                                <DropdownMenuSeparator/>
+                                <DropdownMenuItem>Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
             </CardHeader>
             <CardContent className="p-6 text-sm">
                 <div className="grid gap-3">
@@ -186,7 +191,7 @@ export function NodeDetailLateral({node} : NodesProps) {
                         </li>
                         <li className="flex items-center justify-between">
                             <span className="text-muted-foreground">PHP</span>
-                            <span>{parsedAttributes.software.php.substring(0,55)}...</span>
+                            <span>{parsedAttributes.software.php.substring(0, 55)}...</span>
                         </li>
                         <li className="flex items-center justify-between">
                             <span className="text-muted-foreground">Composer</span>

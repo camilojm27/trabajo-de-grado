@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreNodeRequest;
 use App\Models\Node;
+use App\Models\User;
 use App\Services\NodeService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -61,6 +62,26 @@ class NodeController extends Controller
         return Redirect::back()->with('success', 'User added successfully');
     }
 
+    public function deleteUserFromNode(Node $node, $userId): RedirectResponse
+    {
+        $this->authorize('delete', $node);
+
+        $user = User::findOrFail($userId);
+
+        if ($node->created_by === $user->id) { // Assuming there's a creator_id field
+            return Redirect()->back()->withErrors('error', 'The owner of the node cannot be deleted.');
+        }
+
+        if (! $node->users()->where('user_id', $user->id)->exists()) {
+            return Redirect()->back()->withErrors('error', 'User not found on this node.');
+        }
+
+        $node->users()->detach($user->id);
+
+        return Redirect::back()->with('success', 'User removed successfully.');
+
+    }
+
     public function store(StoreNodeRequest $request): JsonResponse
     {
         $node = $this->nodeService->createNode($request->validated());
@@ -98,4 +119,6 @@ class NodeController extends Controller
 
         return response()->json([], HttpResponse::HTTP_OK);
     }
+
+    public function destroy() {}
 }

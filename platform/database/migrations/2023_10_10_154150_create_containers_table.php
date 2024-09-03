@@ -22,6 +22,9 @@ return new class extends Migration
             $table->string('status')->nullable();
             $table->string('error')->nullable();
             $table->boolean('verified');
+            $table->string('log_file_path')->nullable();
+            $table->timestamp('log_timestamp')->nullable();
+            $table->string('log_download_link')->nullable();
             $table->json('attributes')->nullable();
             $table->timestamps();
         });

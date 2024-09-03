@@ -27,12 +27,17 @@ class NodePolicy
 
     public function delete(User $user, Node $node): bool
     {
-        return $this->canAccessNode($user, $node);
+        return $this->isNodeOwner($user, $node);
     }
 
     protected function canAccessNode(User $user, Node $node): bool
     {
         return $user->id === $node->created_by
             || $node->users()->where('user_id', $user->id)->exists();
+    }
+
+    protected function isNodeOwner(User $user, Node $node): bool
+    {
+        return $user->id === $node->created_by;
     }
 }

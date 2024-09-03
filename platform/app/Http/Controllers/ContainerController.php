@@ -5,20 +5,25 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreContainerRequest;
 use App\Models\Container;
 use App\Models\Node;
+use App\Models\TempHash;
 use App\Services\ContainerService;
 use App\Services\ContainerTemplateService;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ContainerController extends Controller
 {
     private $containerService;
+
     private $containerTemplateService;
 
-    public function __construct(ContainerService $containerService, ContainerTemplateService  $containerTemplateService)
+    public function __construct(ContainerService $containerService, ContainerTemplateService $containerTemplateService)
     {
         $this->containerService = $containerService;
         $this->containerTemplateService = $containerTemplateService;
@@ -43,6 +48,7 @@ class ContainerController extends Controller
     public function create(): Response
     {
         $templates = $this->containerTemplateService->getAllTemplates();
+
         return Inertia::render('Container/Create', [
             'nodes' => Node::all(), //TODO: Get User Nodes
             'templates' => $templates,
@@ -53,9 +59,9 @@ class ContainerController extends Controller
     {
         $container = $this->containerService->createContainer($request->validated());
 
-//        if ($request->input('save_as_template')) {
-//            $this->containerTemplateService->createTemplate($request->input('template_name'), $container->attributesToArray());
-//        }
+        //        if ($request->input('save_as_template')) {
+        //            $this->containerTemplateService->createTemplate($request->input('template_name'), $container->attributesToArray());
+        //        }
 
         $templates = $this->containerTemplateService->getAllTemplates();
 
@@ -73,6 +79,47 @@ class ContainerController extends Controller
         $logs = $this->containerService->getLogs($container);
 
         return response()->json(['logs' => $logs]);
+    }
+
+    public function requestLogFile(Container $container)
+    {
+        $this->authorize('view', $container);
+        $this->containerService->requestLogFile($container);
+
+        return redirect()->back()->with('success', 'Container log file requested.');
+    }
+
+    /**
+     * @throws FileNotFoundException
+     */
+    public function uploadLogFile(Request $request, $hash)
+    {
+        $tempHash = TempHash::where('hash', $hash)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        $request->validate([
+            'log_file' => 'required|file',
+        ]);
+
+        $container = $tempHash->container;
+
+        $path = Storage::disk('public')->putFileAs('containerlog', $request->log_file, $container->id.'.txt');
+
+        $downloadLink = Storage::url($path);
+        //        if (Storage::disk('public')->exists($container->log_file_path)) {
+        //            Storage::disk('public')->delete($container->log_file_path);
+        //        }
+        $container->update([
+            'log_file_path' => $path,
+            'log_download_link' => $downloadLink,
+            'log_timestamp' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Log file uploaded successfully',
+            'download_link' => $downloadLink,
+        ]);
     }
 
     public function recreate(Container $container): JsonResponse

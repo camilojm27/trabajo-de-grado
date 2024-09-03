@@ -11,6 +11,11 @@ type HostRequest struct {
 	PID    string `json:"pid"`
 }
 
+/*
+This struct only truly work when creating a container, if you sent other type of action is only required the container_id
+and the laravel struct when $container->attributes its not the same, the json key has different name so you have to send only the container_id
+*/
+
 type ContainerRequestData struct {
 	Name            string                         `json:"name"`
 	Image           string                         `json:"image"`
@@ -25,6 +30,7 @@ type ContainerRequestData struct {
 	StopContainer struct {
 		Timeout int `json:"timeout"`
 	}
+	Hash string `json:"hash,omitempty"`
 }
 
 type ContainerRequestDataAttributes struct {

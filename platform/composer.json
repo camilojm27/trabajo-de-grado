@@ -12,6 +12,7 @@
         "laravel/reverb": "@beta",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "mchev/banhammer": "^2.3",
         "php-amqplib/php-amqplib": "^3.6",
         "tightenco/ziggy": "^2.0"
     },

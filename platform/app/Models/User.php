@@ -4,12 +4,15 @@ namespace App\Models;
 
 //use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Mchev\Banhammer\Traits\Bannable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use Bannable, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -48,7 +51,7 @@ class User extends Authenticatable
     /**
      * The nodes that the user belongs to.
      */
-    public function nodes()
+    public function nodes(): BelongsToMany
     {
         return $this->belongsToMany(Node::class, 'nodes_users', 'user_id', 'node_id');
     }
@@ -56,7 +59,7 @@ class User extends Authenticatable
     /**
      * The nodes that the user has created.
      */
-    public function createdNodes()
+    public function createdNodes(): HasMany
     {
         return $this->hasMany(Node::class, 'created_by');
     }

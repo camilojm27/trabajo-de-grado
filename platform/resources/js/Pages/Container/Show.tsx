@@ -8,6 +8,7 @@ import {JSX} from "react/jsx-runtime";
 import {Badge} from "@/components/ui/badge";
 import ContainerMetrics from "@/components/app/ContainerMetrics";
 import ContainerLogs from "@/components/app/ContainerLogs";
+import {Container} from "@/types/container";
 
 interface Metrics {
     mem_limit: number;
@@ -21,12 +22,11 @@ interface Props {
     auth: {
         user: User;
     };
-    container: any;
+    container: Container;
 }
 
 export default function Show({auth, container}: Props) {
     console.log(container.container_id);
-
 
     return (
         <AuthenticatedLayout
@@ -58,20 +58,20 @@ export default function Show({auth, container}: Props) {
                 <main
                     className="flex min-h-[calc(100vh-_theme(spacing.16))]  flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10 dark:bg-gray-900">
                     <div className="max-w-6xl w-full mx-auto grid gap-2">
-                        <h1 className="font-semibold text-3xl">Server Details</h1>
+                        <h1 className="font-semibold text-3xl">Node Status {container.node.isOnline ? (
+                            <Badge className="bg-green-200 text-green-800" variant="outline">
+                                Online
+                            </Badge>) : (
+                            <Badge className="bg-red-200 text-red-800" variant="outline">
+                                Offline
+                            </Badge>
+                        )}</h1>
                         <div className="flex items-center text-sm gap-2">
                             <a className="font-medium" href="#" target="_blank">
-                                {container.container_id}
+                                <strong>container host ID: </strong> {container.container_id}
                             </a>
                             <Separator className="h-5" orientation="vertical"/>
-                            {container.node.isOnline ? (
-                                <Badge className="bg-green-200 text-green-800" variant="outline">
-                                    Online
-                                </Badge>) : (
-                                <Badge className="bg-red-200 text-red-800" variant="outline">
-                                    Offline
-                                </Badge>
-                            )}
+
                         </div>
                     </div>
                     <div className="grid gap-6 max-w-6xl w-full mx-auto">
@@ -132,15 +132,18 @@ export default function Show({auth, container}: Props) {
                     </div>
                     <div className="grid gap-6 max-w-6xl w-full mx-auto lg:grid-cols-2">
 
-                        <ContainerMetrics container={container} />
-                        <ContainerLogs container={container} />
+                        <ContainerMetrics container={container}/>
+                        <ContainerLogs container={container}/>
+                    </div>
+                    <div className="grid gap-6 max-w-6xl w-full mx-auto">
 
                         <Card className="relative overflow-hidden">
                             <CardHeader className="flex flex-row items-center border-b">
                                 <CardTitle>Operating System Information</CardTitle>
                             </CardHeader>
                             <CardContent className="grid gap-4 text-sm p-6">
-                                <pre>{JSON.stringify(container, null, 4)}</pre>
+
+                                <pre>{JSON.stringify(container, null, 2)}</pre>
                             </CardContent>
                         </Card>
                     </div>

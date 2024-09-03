@@ -1,3 +1,5 @@
+import {Node} from "@/types/node";
+
 interface Port {
     IP: string;
     PrivatePort: number;
@@ -92,6 +94,12 @@ export interface Container {
     attributes: Attributes;
     created_at: string;
     updated_at: string;
+    node: Node
+    error: string | null;
+    log_file_path: string | null
+    log_timestamp: string | null
+    log_download_link: string | null
+
 }
 
 

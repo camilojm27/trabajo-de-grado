@@ -26,6 +26,20 @@ class SettingController extends Controller
         return Inertia::render('GeneralSettings', ['settings' => $configs]);
     }
 
+    public function phpinfo(): \Inertia\Response
+    {
+        return Inertia::render('PHPinfo', []);
+    }
+
+    public function rawPhpinfo()
+    {
+        ob_start();
+        phpinfo();
+        $phpinfo = ob_get_clean();
+
+        return response($phpinfo)->header('Content-Type', 'text/html');
+    }
+
     public function update(Request $request, $id): \Illuminate\Http\RedirectResponse
     {
 
