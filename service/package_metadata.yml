@@ -1,0 +1,7 @@
+name: plataforma-gestion-contenedores
+version: 0.0.1
+description: A service to manage docker containers from a web app.
+maintainer: Camilo Mezú Mina <camilo.mezu@correounivalle.edu.co>
+url: https://github.com/camilojm27/trabajo-de-grado
+license: MIT
+dependencies: []
