@@ -27,7 +27,7 @@ jobs:
 
       - name: Install FPM and YAML tools
         run: |
-          sudo apt-get install -y ruby ruby-dev gcc make rpm-build
+          sudo apt-get install -y ruby ruby-dev gcc make rpm
           sudo gem install --no-document fpm
           sudo apt-get install -y yq  # For parsing YAML
 
