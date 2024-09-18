@@ -21,16 +21,19 @@ class RabbitMQConsumer extends Command
      * @var string
      */
     protected $signature = 'amqp:consume';
+
     /**
      * The console command description.
      *
      * @var string
      */
     protected $description = 'Consume messages from RabbitMQ queue';
+
     private AbstractChannel|AMQPChannel $channel;
 
     /**
      * Execute the console command.
+     *
      * @throws Exception
      */
     public function handle(): void
@@ -40,7 +43,6 @@ class RabbitMQConsumer extends Command
         $this->consumeMessages();
     }
 
-
     private function establishRabbitMQConnection(): void
     {
         try {
@@ -49,7 +51,7 @@ class RabbitMQConsumer extends Command
             );
             $this->channel = $connection->channel();
         } catch (Exception $e) {
-            $this->error('Failed to connect to RabbitMQ: ' . $e->getMessage());
+            $this->error('Failed to connect to RabbitMQ: '.$e->getMessage());
             exit(1); // Terminate with error
         }
     }
@@ -82,7 +84,8 @@ class RabbitMQConsumer extends Command
             Node::findOrFail($messageData['node_id']);
 
         } catch (Exception $e) {
-            $this->warn('Node not found: ' . $messageData['node_id']);
+            $this->warn('Node not found: '.$messageData['node_id']);
+
             //TODO: Delete the node from rabbitmq
             return;
         }
@@ -93,6 +96,7 @@ class RabbitMQConsumer extends Command
     {
         $body = $message->body;
         $json = json_decode($body, true);
+
         return [
             'action' => $json['action'],
             'status' => $json['status'],
@@ -105,7 +109,7 @@ class RabbitMQConsumer extends Command
 
     private function dispatchAction(string $action, array $messageData): void
     {
-        $this->info('Dispatching event: ' . $action);
+        $this->info('Dispatching event: '.$action);
 
         switch ($action) {
             case 'LIST:CONTAINERS':
@@ -146,17 +150,16 @@ class RabbitMQConsumer extends Command
 
         if ($messageData['status'] === 'error') {
             $this->handleContainerError($container, $messageData['error']);
-        } else if ($messageData['status'] === 'success') {
+        } elseif ($messageData['status'] === 'success') {
             if ($actionVerb === 'deleted') {
                 $container->delete();
             } else {
-                $container->state = $messageData["data"]["State"]["Status"]; //TODO: ERROR   Attempt to assign property "state" on null
-                //$container->error = null;
+                $container->state = $messageData['data']['State']['Status']; //TODO: ERROR   Attempt to assign property "state" on null
+                $container->error = null;
                 $container->attributes = $messageData['data'];
                 $container->verified = true;
                 $container->update();
             }
-
 
         }
     }
@@ -176,7 +179,7 @@ class RabbitMQConsumer extends Command
         $containers = json_decode($messageData['data'], true);
         $node_id = $messageData['node_id'];
         if (is_array($containers)) {
-            $containers_to_delete = array_map(function($item) {
+            $containers_to_delete = array_map(function ($item) {
                 return $item['Id'];
             }, $containers);
         } else {
@@ -186,28 +189,28 @@ class RabbitMQConsumer extends Command
 
         Container::whereNotIn('container_id', $containers_to_delete)->where('node_id', $node_id)->delete();
         foreach ($containers as $container) {
-            $existingContainer = Container::where('container_id', $container["Id"])->first();
+            $existingContainer = Container::where('container_id', $container['Id'])->first();
             if ($existingContainer !== null) {
                 // Update existing record
-                $existingContainer->status = $container["Status"];
-                $existingContainer->state = $container["State"];
-                $existingContainer->name = $container["Names"][0];
+                $existingContainer->status = $container['Status'];
+                $existingContainer->state = $container['State'];
+                $existingContainer->name = $container['Names'][0];
                 $existingContainer->verified = true;
                 $existingContainer->attributes = $container;
                 $existingContainer->update();
             } else {
                 // Create a new record
-                $newContainer = new Container();
-                $newContainer->container_id = $container["Id"];
-                $newContainer->name = $container["Names"][0];
+                $newContainer = new Container;
+                $newContainer->container_id = $container['Id'];
+                $newContainer->name = $container['Names'][0];
                 $newContainer->image = $container['Image'];
                 $newContainer->node_id = $node_id;
-                $newContainer->status = $container["Status"];
-                $newContainer->state = $container["State"];
+                $newContainer->status = $container['Status'];
+                $newContainer->state = $container['State'];
                 $newContainer->verified = true;
                 $newContainer->attributes = $container;
-                $newContainer->created = Carbon::createFromTimestamp($container["Created"]);
-                error_log('New container created: ' . $container["Id"] . ' on node: ' . $node_id);
+                $newContainer->created = Carbon::createFromTimestamp($container['Created']);
+                error_log('New container created: '.$container['Id'].' on node: '.$node_id);
 
                 $newContainer->save();
             }

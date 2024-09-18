@@ -101,7 +101,7 @@ const ContainerLogs = ({ container }: Props) => {
                                 {container.log_download_link && container.log_timestamp &&
                                     <Button id="downloadlink" disabled={isDisabled}>
                                         <a href={container.log_download_link} target="_blank" rel="noopener noreferrer">
-                                            {isDisabled ? 'Download log from <strong>{container.log_timestamp}</strong>' : 'Download Log' }
+                                            {isDisabled ? `Download log from ${container.log_timestamp}` : 'Download Log' }
                                         </a>
                                     </Button>
                                 }
@@ -113,14 +113,13 @@ const ContainerLogs = ({ container }: Props) => {
                                             preserveScroll: true,
                                             onSuccess: () => {
                                                 toast({
-                                                    title: 'Container created successfully',
-                                                    description: 'The order has been send and is being processed.',
+                                                    title: 'Log requested successfully',
                                                 });
                                                 setIsDisabled(true)
                                                 window.setTimeout(() => {
                                                         router.reload()
                                                     setIsDisabled(false)
-                                                }, 5000);
+                                                }, 2000);
                                             },
                                             onError: (errors) => {
                                                 toast({

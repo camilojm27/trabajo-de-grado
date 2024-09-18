@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ContainerActions;
+use App\Enums\ContainerState;
 use App\Events\SendActionToNode;
 use App\Models\Container;
 use App\Models\User;
@@ -11,16 +12,30 @@ use Illuminate\Support\Facades\Log;
 
 class ContainerService
 {
+    private int $paginationSize = 10;
+
     public function getUserContainers(User $user)
     {
-        return Container::with('node')
+        return Container::with('node')->orderBy('name')
             ->whereHas('node', function ($query) use ($user) {
                 $query->where('created_by', $user->id)
                     ->orWhereHas('users', function ($query) use ($user) {
                         $query->where('user_id', $user->id);
                     });
-            })
-            ->get();
+            })->paginate($this->paginationSize)->withQueryString();
+    }
+
+    public function getMyContainers(User $user)
+    {
+        return Container::with('node')->orderBy('name')
+            ->whereHas('node', function ($query) use ($user) {
+                $query->where('created_by', $user->id);
+            })->paginate($this->paginationSize)->withQueryString();
+    }
+
+    public function getAllContainers()
+    {
+        return Container::with('node')->orderBy('name')->paginate($this->paginationSize)->withQueryString();
     }
 
     public function createContainer(array $data): Container
@@ -103,6 +118,12 @@ class ContainerService
 
     public function deleteContainer(Container $container): void
     {
+
+        if ($container->state == ContainerState::SEND and $container->status == ContainerState::ERROR and ! $container->verified) {
+            $container->delete();
+
+            return;
+        }
         $this->dispatchContainerAction($container, ContainerActions::DELETE);
         $this->updateContainerState($container, 'send', false);
     }

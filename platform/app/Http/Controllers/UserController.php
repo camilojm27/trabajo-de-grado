@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
@@ -25,9 +23,11 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->paginate(10)->through(function ($user) {
-            return array_merge($user->toArray(), ['is_banned' => $user->isBanned()]);
-        });
+        $users = $query->paginate(10)
+            ->withQueryString()
+            ->through(function ($user) {
+                return array_merge($user->toArray(), ['is_banned' => $user->isBanned()]);
+            });
 
         return Inertia::render('Users/Users', [
             'users' => $users,
@@ -35,36 +35,17 @@ class UserController extends Controller
         ]);
     }
 
-    //    public function destroy(Request $request): RedirectResponse
-    //    {
-    //        $request->validate([
-    //            'password' => ['required', 'current_password'],
-    //            'user_id' => ['required', 'exists:users,id'], // Validate that the user_id exists in the users table
-    //        ]);
-    //
-    //        $userId = $request->input('user_id');
-    //
-    //        // Find the user by the provided user ID
-    //        $user = User::find($userId);
-    //
-    //        // Logout the current user only if they are the ones being deleted
-    //        if ($user->id === $request->user()->id) {
-    //            Auth::logout();
-    //        }
-    //
-    //        // Delete the user
-    //        $user->delete();
-    //
-    //        if ($user->id === $request->user()->id) {
-    //            $request->session()->invalidate();
-    //            $request->session()->regenerateToken();
-    //
-    //            return Redirect::to('/');
-    //        }
-    //
-    //        // Redirect back with success message if the deleted user was not the logged-in user
-    //        return Redirect::back()->with('success', 'User deleted successfully.');
-    //    }
+    public function destroy(User $user): \Illuminate\Http\RedirectResponse //Should be protected by admin middleware
+    {
+        // return If the user is the first admin or if an admin different to 1 tries to delete an admin account
+        if ($user->id === 1 && ($user->is_admin && request()->user()->id != 1)) {
+            return redirect()->back()->withErrors(['message' => 'You cannot Delete an Administrator account.']);
+        }
+
+        $user->delete();
+
+        return Redirect::back()->with('success', 'User '.$user->id.' deleted successfully.');
+    }
 
     public function ban(User $user): \Illuminate\Http\RedirectResponse
     {

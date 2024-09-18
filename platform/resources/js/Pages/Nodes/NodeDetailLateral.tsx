@@ -1,6 +1,6 @@
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
-import {Activity, ChevronLeft, ChevronRight, Copy, MoreVertical} from "lucide-react";
+import {Activity, ChevronLeft, ChevronRight, Copy, MoreVertical, Trash} from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -8,12 +8,24 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import {Separator} from "@/components/ui/separator";
 import {Pagination, PaginationContent, PaginationItem} from "@/components/ui/pagination";
 import {Node} from "@/types/node";
 import React, {useMemo} from "react";
 import {NodeAddUsers} from "@/Pages/Nodes/NodeAddUsers";
-import {Link} from "@inertiajs/react";
+import {Link, router} from "@inertiajs/react";
+import {toast} from "@/components/ui/use-toast";
 
 interface NodesProps {
     node: Node
@@ -36,6 +48,26 @@ export function NodeDetailLateral({node}: NodesProps) {
             };
         }
     }, [node.attributes]);
+
+    function handleDelete(id: string) {
+        router.delete(`/nodes/${id}`, {
+            preserveState: false,
+            preserveScroll: true,
+            onSuccess: (e) => {
+                console.log(e)
+                toast({
+                    title: 'Node deleted successfully',
+                });
+            },
+            onError: (errors) => {
+                console.log(errors)
+                toast({
+                    title: errors.message,
+                    variant: 'destructive',
+                });
+            },
+        });
+    }
     return (
         <Card
             className="overflow-hidden" x-chunk="dashboard-05-chunk-4"
@@ -64,24 +96,44 @@ export function NodeDetailLateral({node}: NodesProps) {
                                 <Activity className="h-4 w-4"/> Realtime Stats</Link>
                         </Button>
                         <NodeAddUsers node={node}></NodeAddUsers>
-                        </div>
                     </div>
-                    <div className="ml-auto flex items-center gap-1">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button size="icon" variant="outline" className="h-8 w-8">
-                                    <MoreVertical className="h-3.5 w-3.5"/>
-                                    <span className="sr-only">More</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Edit</DropdownMenuItem>
-                                <DropdownMenuItem>Export</DropdownMenuItem>
-                                <DropdownMenuSeparator/>
-                                <DropdownMenuItem>Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
+                </div>
+                <div className="ml-auto flex items-center gap-1">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button size="icon" variant="outline" className="h-8 w-8">
+                                <MoreVertical className="h-3.5 w-3.5"/>
+                                <span className="sr-only">More</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                            <DropdownMenuItem>Export</DropdownMenuItem>
+                            <DropdownMenuSeparator/>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <div className="flex flex-row items-center gap-1 hover:cursor-pointer">
+                                        <Trash size={18}/> Delete
+                                    </div>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Do you want to delete the node {node.hostname}?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete node and containers data
+                                            from our server
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction  onClick={() => handleDelete(node.id)}>Continue</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </CardHeader>
             <CardContent className="p-6 text-sm">
                 <div className="grid gap-3">

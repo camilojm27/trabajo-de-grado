@@ -1,10 +1,9 @@
-import {Badge} from "@/components/ui/badge.jsx"
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import {Link, router, usePage} from '@inertiajs/react'
+import {router, usePage} from '@inertiajs/react'
 import {User} from "@/types";
 import {Node} from "@/types/node"
-import {File, LayoutGrid, ListFilter, Sheet} from "lucide-react";
+import {File, ListFilter} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {useEffect, useState} from "react";
 
@@ -54,6 +53,34 @@ export default function Nodes({auth, allUserNodes, systemNodes, myNodes, selecte
         setCurrentNode(selectedNode);
     }, [selectedNode]);
 
+    // const tabs = [
+    //     {
+    //         value: 'system-nodes',
+    //         label: 'System Nodes',
+    //         cardTitle: 'Orders',
+    //         cardDescription: 'Recent orders from your store.',
+    //         component: NodesTable, // Can be any component
+    //         data: systemNodes
+    //     },
+    //     {
+    //         value: 'all-nodes',
+    //         label: 'All Nodes',
+    //         cardTitle: 'Orders',
+    //         cardDescription: 'Recent orders from your store.',
+    //         component: NodesTable, // Use another component
+    //         data: allUserNodes
+    //     },
+    //     {
+    //         value: 'my-nodes',
+    //         label: 'My Nodes',
+    //         cardTitle: 'Orders',
+    //         cardDescription: 'Recent orders from your store.',
+    //         component: NodesTable, // Another different component
+    //         data: myNodes
+    //     }
+    // // ];
+    //
+    // const filters = ['Fulfilled', 'Declined', 'Refunded'];
 
   return (
       <AuthenticatedLayout

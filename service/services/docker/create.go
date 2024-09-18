@@ -58,10 +58,19 @@ func Create(ctx context.Context, containerData types.ContainerRequest) (types2.C
 	if containerData.Data.Attributes.Cmd != "" {
 		config.Cmd = strslice.StrSlice{containerData.Data.Attributes.Cmd}
 	}
+	hostConfig := &container.HostConfig{}
+	//Esto es porque si el front no manda volumenes o está vacio, cuando se creal el contenedor da error
+	if len(volumes) <= 1 {
 
-	hostConfig := &container.HostConfig{
-		Binds:        volumes,
-		PortBindings: ports,
+		hostConfig = &container.HostConfig{
+			PortBindings: ports,
+		}
+
+	} else {
+		hostConfig = &container.HostConfig{
+			Binds:        volumes,
+			PortBindings: ports,
+		}
 	}
 
 	resp, err := cli.ContainerCreate(

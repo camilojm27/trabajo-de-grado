@@ -27,7 +27,7 @@ class NodePolicy
 
     public function delete(User $user, Node $node): bool
     {
-        return $this->isNodeOwner($user, $node);
+        return $this->isNodeOwnerOrAdmin($user, $node);
     }
 
     protected function canAccessNode(User $user, Node $node): bool
@@ -39,5 +39,10 @@ class NodePolicy
     protected function isNodeOwner(User $user, Node $node): bool
     {
         return $user->id === $node->created_by;
+    }
+
+    protected function isNodeOwnerOrAdmin(User $user, Node $node): bool
+    {
+        return $user->id === $node->created_by || $user->is_admin;
     }
 }

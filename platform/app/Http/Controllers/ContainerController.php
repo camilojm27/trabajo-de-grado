@@ -38,10 +38,28 @@ class ContainerController extends Controller
 
     public function index(): Response
     {
-        $containers = $this->containerService->getUserContainers(auth()->user());
+        $query = request()->query();
+        if (! array_key_exists('tab', $query)) {
+            $containers = $this->containerService->getUserContainers(auth()->user());
+        } else {
+            switch ($query['tab']) {
+                case 'system-containers':
+                    $containers = $this->containerService->getAllContainers();
+                    break;
+                case 'my-containers':
+                    $containers = $this->containerService->getMyContainers(auth()->user());
+                    break;
+                case 'all-containers':
+                    $containers = $this->containerService->getUserContainers(auth()->user());
+
+                    break;
+            }
+
+        }
 
         return Inertia::render('Container/Containers', [
             'containers' => $containers,
+            'queryParams' => request()->query(),
         ]);
     }
 
@@ -122,12 +140,12 @@ class ContainerController extends Controller
         ]);
     }
 
-    public function recreate(Container $container): JsonResponse
+    public function recreate(Container $container): RedirectResponse
     {
         $this->authorize('update', $container);
         $this->containerService->recreateContainer($container);
 
-        return response()->json(['message' => 'Container recreation initiated']);
+        return redirect()->back()->with('success', 'Container recreate initiated');
     }
 
     public function restart(Container $container): RedirectResponse

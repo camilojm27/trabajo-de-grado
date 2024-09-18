@@ -35,7 +35,8 @@ export function GeneralSettings({form, nodes}: GeneralSettingsProps) {
                             <SelectContent>
                                 {nodes.map((node) => (
                                     <SelectItem key={node.id} value={node.id}>
-                                        {node.hostname || node.id}
+                                        {/*// @ts-ignore*/}
+                                        {node.hostname || node.id}  <small>{ JSON.parse(node.attributes).hardware.cores} cores</small>
                                     </SelectItem>
                                 ))}
                             </SelectContent>

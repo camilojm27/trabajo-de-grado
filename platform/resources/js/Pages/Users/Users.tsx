@@ -27,6 +27,7 @@ export default function Users({auth, users, queryParams } : UsersProps) {
 
         searchFieldChanged(e.target.value)
     }
+    //https://www.freecodecamp.org/espanol/news/debouncing-en-react-como-retrasar-una-funcion-en-js/
 
     return (
         <AuthenticatedLayout

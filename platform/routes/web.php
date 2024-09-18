@@ -59,6 +59,7 @@ Route::middleware(['auth', 'verified', 'auth.banned'])->group(function () {
     Route::post('/nodes/metrics/{node}', [NodeController::class, 'metrics']);
     Route::post('/nodes/{node}/users', [NodeController::class, 'addUserToNode']);
     Route::delete('/nodes/{node}/users/{user}', [NodeController::class, 'deleteUserFromNode']);
+    Route::delete('/nodes/{node}', [NodeController::class, 'destroy']);
 });
 
 // ------------ Admin ONLY Routes ----------------
@@ -74,6 +75,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::patch('/users/ban/{user}', [UserController::class, 'ban'])->name('user.ban');
     Route::patch('/users/unban/{user}', [UserController::class, 'unban'])->name('user.unban');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('user.delete');
+
 });
 Route::get('/dashboard', [Statistics::class, 'dashboard'])->name('dashboard');
 

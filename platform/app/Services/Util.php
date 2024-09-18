@@ -20,4 +20,9 @@ class Util
             'expires_at' => $expiresAt,
         ]);
     }
+
+    public static function getServerLocalIP(): string
+    {
+        return gethostbyname(gethostname());
+    }
 }

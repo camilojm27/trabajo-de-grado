@@ -48,7 +48,7 @@ type ContainerRequestDataAttributes struct {
 
 type PortBinding struct {
 	HostIP        string `json:"host_ip"`
-	HostPort      string `json:"host_port"`
-	ContainerPort string `json:"container_port"`
+	HostPort      string `json:"hostPort"`
+	ContainerPort string `json:"containerPort"`
 	Protocol      string `json:"protocol"`
 }

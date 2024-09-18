@@ -1,14 +1,15 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import {User} from "@/types";
-import {SVGProps, useEffect, useRef, useState} from "react";
+import React, {SVGProps, useEffect, useRef, useState} from "react";
 import {Link} from "@inertiajs/react";
 import {Separator} from "@/components/ui/separator";
 import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {JSX} from "react/jsx-runtime";
 import {Badge} from "@/components/ui/badge";
 import ContainerMetrics from "@/components/app/ContainerMetrics";
-import ContainerLogs from "@/components/app/ContainerLogs";
+import ContainerLogs from "@/Pages/Container/ContainerLogs";
 import {Container} from "@/types/container";
+import ContainerActions from "@/Pages/Container/ContainerActions";
 
 interface Metrics {
     mem_limit: number;
@@ -77,8 +78,9 @@ export default function Show({auth, container}: Props) {
                     <div className="grid gap-6 max-w-6xl w-full mx-auto">
 
                         <Card className="relative overflow-hidden">
-                            <CardHeader className="flex flex-row items-center border-b">
-                                <CardTitle>Container Information</CardTitle>
+                            <CardHeader className="flex flex-row items-center border-b justify-between">
+                                <CardTitle>Container Information </CardTitle>
+                                <ContainerActions container={container}></ContainerActions>
                             </CardHeader>
                             <CardContent className="grid gap-4 text-sm p-6">
                                 <div className="flex items-center">

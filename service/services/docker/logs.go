@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,8 +11,6 @@ import (
 
 	"github.com/camilojm27/trabajo-de-grado/service/services"
 	ty "github.com/camilojm27/trabajo-de-grado/service/types"
-
-	"github.com/camilojm27/trabajo-de-grado/service/pkg/util"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/rabbitmq/amqp091-go"
@@ -24,31 +23,34 @@ var (
 
 func Logs(ctx context.Context, rclient *services.RabbitMQClient, containerID string) error {
 	nodeId := ctx.Value("nodeId").(string)
-
 	fmt.Println("LOGS CALLED")
+
 	logsMutex.Lock()
 	defer logsMutex.Unlock()
 
 	if !runningLogs[containerID] {
 		runningLogs[containerID] = true
-
 		go func() {
 			defer func() {
 				logsMutex.Lock()
 				delete(runningLogs, containerID)
 				logsMutex.Unlock()
 			}()
-			// Create Docker client
-			fmt.Println("LOGS STARTED")
 
+			fmt.Println("LOGS STARTED")
 			cli, err := client.NewClientWithOpts(client.FromEnv)
 			if err != nil {
 				log.Printf("failed to create docker client: %v", err)
 				return
 			}
 
-			// Get container logs
-			options := container.LogsOptions{ShowStdout: true, ShowStderr: true, Follow: true, Tail: "1000"}
+			options := container.LogsOptions{
+				ShowStdout: true,
+				ShowStderr: true,
+				Follow:     true,
+				Tail:       "1000",
+			}
+
 			logs, err := cli.ContainerLogs(context.Background(), containerID, options)
 			if err != nil {
 				log.Printf("failed to get logs for container %s: %v", containerID, err)
@@ -60,49 +62,67 @@ func Logs(ctx context.Context, rclient *services.RabbitMQClient, containerID str
 				NodeID:      nodeId,
 				ContainerID: containerID,
 			}
-			// Read and send logs
-			buffer := make([]byte, 4096)
-			for {
-				/*TODO: Works but there is a better way to do this
-				- Some short logs are not being sent
-				- If the logs are too long the pusher websocket will not be able to handle it
-				- If it sent too much logs has to be handled on the frontend
-				- Fix encoding, there are some weird characters
-				*/
 
-				n, err := logs.Read(buffer)
+			reader := bufio.NewReader(logs)
+			for {
+				// Read the first byte to determine the stream type
+				streamType, err := reader.ReadByte()
 				if err != nil {
 					if err == io.EOF {
 						break
 					}
-					log.Printf("Error reading logs: %v", err)
+					log.Printf("failed to read log header: %v", err)
 					continue
 				}
 
-				fmt.Print(string(buffer[:n]))
-				sendLogs.Logs = util.SafeString(buffer[:n])
-				jsonDataBytes, err := json.Marshal(sendLogs)
+				// Skip the next 7 bytes (rest of the header)
+				_, err = reader.Discard(7)
+				if err != nil {
+					log.Printf("failed to discard header bytes: %v", err)
+					continue
+				}
 
+				// Read the actual log line
+				line, err := reader.ReadString('\n')
+				if err != nil && err != io.EOF {
+					log.Printf("failed to read log line: %v", err)
+					continue
+				}
+
+				// Determine the stream prefix
+				var prefix string
+				if streamType == 1 {
+					prefix = "[stdout] "
+				} else if streamType == 2 {
+					prefix = "[stderr] "
+				}
+
+				// Combine prefix and line
+				logLine := prefix + line
+
+				fmt.Print(logLine)
+				jsonDataBytes, err := json.Marshal(sendLogs)
 				if err != nil {
 					fmt.Println(err)
+					continue
 				}
 
 				sendLogsToRabbitMQ(ctx, rclient, jsonDataBytes)
-			}
-			ctx.Done() //If the context is done, the logs will be closed
-			select {
-			default:
 
+				if err == io.EOF {
+					break
+				}
+			}
+			ctx.Done()
+			select {
 			case <-ctx.Done():
 				logsMutex.Lock()
 				delete(runningLogs, containerID)
 				logsMutex.Unlock()
 				logs.Close()
 				fmt.Printf("DONE LOGS containerID: %s\n", containerID)
-
-				return
+			default:
 			}
-
 		}()
 	} else {
 		fmt.Printf("Job for containerID: %s is already running\n", containerID)

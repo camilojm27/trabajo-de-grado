@@ -120,5 +120,11 @@ class NodeController extends Controller
         return response()->json([], HttpResponse::HTTP_OK);
     }
 
-    public function destroy() {}
+    public function destroy(Node $node)
+    {
+        $this->authorize('delete', $node); //Owner or Admin can delete a node, not protected by middleware
+        $this->nodeService->destroy($node);
+
+        return Redirect::back()->with('success', 'Node removed successfully.');
+    }
 }

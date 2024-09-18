@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"strings"
 	"sync"
 
 	ty "github.com/camilojm27/trabajo-de-grado/service/types"
@@ -24,23 +26,22 @@ func LogFile(ctx context.Context, containerData ty.ContainerRequestData, apiEndp
 	containerID := containerData.ContainerID
 	fmt.Println(containerID)
 	const maxLogSize = 100 * 1024 * 1024 // 100MB
-	// nodeId := ctx.Value("nodeId").(string)
 
 	fmt.Println("LOGS CALLED")
 	fmt.Println(containerData.ContainerID)
+
 	jobStatusMutex.Lock()
 	defer jobStatusMutex.Unlock()
 
 	if !runningLog[containerID] {
 		runningLog[containerID] = true
-
 		go func() {
 			defer func() {
 				jobStatusMutex.Lock()
 				delete(runningLog, containerID)
 				jobStatusMutex.Unlock()
 			}()
-			// Create Docker client
+
 			fmt.Println("LOG FILE STARTED")
 			apiEndpoint = apiEndpoint + "/api/logs/upload/" + containerData.Hash
 
@@ -57,56 +58,78 @@ func LogFile(ctx context.Context, containerData ty.ContainerRequestData, apiEndp
 				Tail:       "all",
 			}
 
-			// Get logs from the container
 			logs, err := cli.ContainerLogs(context.Background(), containerID, options)
 			if err != nil {
 				log.Printf("failed to get logs for container %s: %v", containerID, err)
 				return
-
 			}
 			defer logs.Close()
 
-			// Read logs into a buffer and enforce a 100MB limit
-			var buf bytes.Buffer
-			written, err := io.CopyN(&buf, logs, maxLogSize)
-			if err != nil && err != io.EOF {
-				log.Printf("failed to read logs for container %s: %v", containerID, err)
-				return
+			var logContent strings.Builder
+			reader := bufio.NewReader(logs)
+
+			for {
+				// Read the first byte to determine the stream type
+				_, err := reader.ReadByte()
+				if err != nil {
+					if err == io.EOF {
+						break
+					}
+					log.Printf("failed to read log header: %v", err)
+					return
+				}
+
+				// Skip the next 7 bytes (rest of the header)
+				_, err = reader.Discard(7)
+				if err != nil {
+					log.Printf("failed to discard header bytes: %v", err)
+					return
+				}
+
+				// Read the actual log line
+				line, err := reader.ReadString('\n')
+				if err != nil && err != io.EOF {
+					log.Printf("failed to read log line: %v", err)
+					return
+				}
+
+				// Append the line to our log content
+				logContent.WriteString(line)
+
+				// Check if we've exceeded the max log size
+				if logContent.Len() >= maxLogSize {
+					log.Println("log size exceeded 100MB and was truncated")
+					break
+				}
+
+				if err == io.EOF {
+					break
+				}
 			}
 
-			// If the log size exceeds the limit, log a message
-			if written == maxLogSize {
-				log.Println("log size exceeded 100MB and was truncated")
-			}
 			fmt.Println("---------------------------------------------")
-			err = sendLogsToAPI(apiEndpoint, &buf)
+			err = sendLogsToAPI(apiEndpoint, logContent.String())
 			if err != nil {
 				log.Fatalf("failed to send logs to API: %v", err)
 			}
 
-			ctx.Done() //If the context is done, the logs will be closed
 			select {
-			default:
-
 			case <-ctx.Done():
 				logMutex.Lock()
 				delete(runningLog, containerID)
 				logMutex.Unlock()
 				logs.Close()
 				fmt.Printf("DONE LOGS containerID: %s\n", containerID)
-
-				return
+			default:
 			}
-
 		}()
 	} else {
 		fmt.Printf("Job for containerID: %s is already running\n", containerID)
 	}
-
 	return nil
 }
-func sendLogsToAPI(apiURL string, logBuffer *bytes.Buffer) error {
 
+func sendLogsToAPI(apiURL string, logContent string) error {
 	// Prepare a multipart form to send the log file
 	var requestBody bytes.Buffer
 	writer := multipart.NewWriter(&requestBody)
@@ -117,8 +140,8 @@ func sendLogsToAPI(apiURL string, logBuffer *bytes.Buffer) error {
 		return err
 	}
 
-	// Copy the log buffer into the form file field
-	_, err = io.Copy(part, logBuffer)
+	// Write the log content into the form file field
+	_, err = io.WriteString(part, logContent)
 	if err != nil {
 		return err
 	}
@@ -149,7 +172,6 @@ func sendLogsToAPI(apiURL string, logBuffer *bytes.Buffer) error {
 		// print the body of the response
 		bd, _ := io.ReadAll(resp.Body)
 		fmt.Println(string(bd))
-
 		return fmt.Errorf("API returned status code %d", resp.StatusCode)
 	}
 

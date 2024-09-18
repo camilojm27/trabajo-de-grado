@@ -6,6 +6,13 @@ import {Head, router} from '@inertiajs/react';
 import {Button} from "@/components/ui/button";
 import LaraPagination from "@/components/app/LaraPagination";
 import {toast} from "@/components/ui/use-toast";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel,
+    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 interface UsersProps {
     users: PaginationI<User>
@@ -60,13 +67,13 @@ export default function UsersTable({users}: UsersProps) {
     }
 
     function handleDelete(id: number) {
-        router.delete(`/user/delete/${id}`, {
+        router.delete(`/users/${id}`, {
             preserveState: false,
             preserveScroll: true,
             onSuccess: (data) => {
                 console.log(data)
                 toast({
-                    title: 'User Unbanned successfully',
+                    title: 'User deleted successfully',
                 });
             },
             onError: (errors) => {
@@ -119,7 +126,26 @@ export default function UsersTable({users}: UsersProps) {
                                         {user.is_admin ? 'Admin' : 'User'}
                                     </TableCell>
                                     <TableCell className="flex justify-around">
-                                        <Button variant='secondary' onClick={()=> handleDelete(user.id)}><Trash/>Delete</Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <div className="flex flex-row items-center gap-1 hover:cursor-pointer">
+                                                    <Trash size={18}/> Delete
+                                                </div>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Do you want to delete the user {user.name}?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This action cannot be undone. This will permanently delete data
+                                                        from our server
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction  onClick={() => handleDelete(user.id)}>Delete</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                         <Button variant='secondary'><UserRoundPen/>Edit User</Button>
                                         {
                                             user.is_banned ?
