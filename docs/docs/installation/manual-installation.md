@@ -1,5 +1,5 @@
 ---
-sidebar_label: 'Hi!'
+sidebar_label: "Plataforma (manual)"
 ---
 
 import Tabs from '@theme/Tabs';
@@ -94,16 +94,7 @@ sudo apt-get install rabbitmq-server -y --fix-missing
 
 ````
 
-All steps covered below are **mandatory** unless otherwise specified.
-### Install Essential Dependencies
-
-```bash
-sudo apt-get update -y
-
-sudo apt-get install curl gnupg -y
-````
-
-  </TabItem>
+</TabItem>
   <TabItem value="rpm" label="Fedora | RedHat">
   Te recomendamos leer la guia de rabbitmq para mayor información https://www.rabbitmq.com/docs/install-rpm
       ```
@@ -152,40 +143,46 @@ La aplicación web está desarrollada en el framework web de PHP Laravel, por lo
 </details>
 
 No se abordara como realizar la instalacion de las siguentes ya que son muy comunes en el desarrollo web y varia la instalación en cada plataforma
+
 - [Composer](https://getcomposer.org/)
 - Base de datos [SQL](https://laravel.com/docs/11.x/database)
 - Base de datos [Redis](https://docusaurus.io/docs/styling-layout) (opcional)
 - Nodejs [20 o mayor ](https://docusaurus.io/docs/search) con npm
 - [Rabbitmq](https://docusaurus.io/)
 
-
 ### Instalación de dependencias
 
 Descargar el repositorio de la aplicación
 
-```
+````
+
 git clone https://github.com/camilojm27/trabajo-de-grado.git
+
 ```
 
 acceder a la carpteta **platform**, e instalar las dependencias de php y de javascript
 
 ```
+
 cd trabajo-de-grado/platform
 composer install
 npm install
 npm run build
+
 ```
+
 realizar una copia del archivo .env.example y llamarlo .env
 
 ```
+
 cp .env.example .env
-```
+
+````
 
 Editar el archivo .env con la configuración a base de datos, rabbitmq, websockets, redis, correo electronico, etc...
 La configuracion de la plataforma se explica más adelante
 
-
-
 <!-- ```jsx title="/src/components/HelloCodeTitle.js"
 cp .env.example .env
 ``` -->
+````
