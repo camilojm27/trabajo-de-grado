@@ -7,23 +7,65 @@ sidebar_position: 1
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Docker
+# Guía de Instalación y Configuración de Laravel con Docker
 
-Para instalar y ejecutar la aplicación utilizaremos el sistema proporcionado por Laravel llamado [Laravel Sail](https://laravel.com/docs/11.x/sail), que nos facilita la gestion
+## Introducción
 
-# Laravel Sail
+Esta guía proporciona instrucciones detalladas para instalar y configurar una aplicación Laravel que utiliza Docker, RabbitMQ y Laravel Reverb para WebSockets. La aplicación está diseñada para ofrecer una plataforma robusta de gestión de contenedores con funcionalidades en tiempo real.
 
-Es una interfaz de línea de comandos ligera para interactuar con el entorno de desarrollo Docker. Sail proporciona un gran punto de partida para la construcción de una aplicación sin necesidad de experiencia previa en Docker.
+## Requisitos Previos
 
-Para utilizar esta herramienta, unicamente debemos instalar las dependencias de PHP del proyecto usando el gestor [composer](https://getcomposer.org/), tambien podemos usar una imagen de docker para composer si queremos.
+Antes de comenzar, asegúrate de tener instalado en tu sistema:
 
-:::info
-Todos los siguentes comandos deben ser ejecutados en la carpeta platform
-:::
+- [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Git](https://git-scm.com/downloads)
 
-<Tabs  groupId="manager">
+## Instalación
+
+### Clonar el Repositorio
+
+1. Abre una terminal y navega al directorio donde deseas clonar el proyecto.
+2. Ejecuta el siguiente comando:
+   ```
+   git clone https://github.com/camilojm27/trabajo-de-grado.git
+   ```
+3. Ingresa al directorio del proyecto:
+   ```
+   cd trabajo-de-grado/platform
+   ```
+
+### Configuración del Entorno
+
+1. Copia el archivo `.env.docker` a `.env`:
+   ```
+   cp .env.docker .env
+   ```
+2. Abre el archivo `.env` con tu editor de texto preferido y configura las siguientes variables:
+
+   - `APP_NAME`: Nombre de tu aplicación
+   - `APP_URL`: URL de tu aplicación (por defecto: http://localhost)
+   - `DB_PASSWORD`: Contraseña para la base de datos PostgreSQL
+   - `REVERB_APP_ID`: Identificador único para tu aplicación Reverb
+   - `REVERB_APP_KEY`: Clave de aplicación para Reverb
+   - `REVERB_APP_SECRET`: Secreto de aplicación para Reverb
+
+   Ejemplo de configuración de Reverb:
+
+   ```
+   REVERB_APP_ID=mi-app-plataforma
+   REVERB_APP_KEY=reverb_key_123456789
+   REVERB_APP_SECRET=reverb_secret_abcdefghijk
+   ```
+
+### Instalación de Dependencias
+
+Utiliza uno de los siguientes métodos para instalar las dependencias de PHP:
+
+<Tabs groupId="manager">
   <TabItem value="docker" label="Docker">
-En caso de que no tengas composer en el sistema, puedes instalar las dependencias con docker tambien
+
+Si no tienes Composer instalado en tu sistema, puedes usar Docker para instalar las dependencias:
 
 ```bash
 docker run --rm \
@@ -35,97 +77,134 @@ composer install --ignore-platform-reqs
 ```
 
   </TabItem>
+  <TabItem value="composer" label="Composer" default>
 
-  <TabItem value="coposer" label="Composer" default>
-`composer install`
-
-  </TabItem>
-
-</Tabs>
-
-<!-- <Tabs  groupId="manager">
-  <TabItem value="docker" label="Docker">
-```bash
-    docker run --rm \
-    -u "$(id -u):$(id -g)" \
-    -v "$(pwd):/var/www/html" \
-    -w /var/www/html \
-    laravelsail/php83-composer:latest \
-    php artisan sail:install
-```
-  </TabItem>
-  <TabItem value="coposer" label="Composer" default>
-`php artisan sail:install`
-
-  </TabItem>
-</Tabs> -->
-
-Para ejecutar el contenedor ingresas el comando, este se encarga de generar los contenedores para el funcionamiento y de lanzar la aplicación, en caso de querer configurar los parametros puedes modificar el archivo docker-compose.yml
-
-`./vendor/bin/sail up`
-
-y la primera vez que corras el contenedor, tambien debes correr la migracion para popular la base de datos
-
-`./vendor/bin/sail artisan migrate --seed`
-
-para el funcionamiento de la interfaz web es necesario correr diferentes comandos, algunos de estos deben estar ejecutandose todo el tiempo ya que proporcionan las funcionalidades en tiempo real de la plataforma como la escucha de contenedores, metricas etc...
-
-para esto pudes correr el script encargado o individualmente cada comando dentro del contenedor
-
-<Tabs  groupId="manager">
-  <TabItem value="script" label="Script">
-Este script está diseñado para ejecutar comandos en un entorno de desarrollo utilizando Laravel Sail. Proporciona dos tipos de comandos:
-
-- **Comandos que se ejecutan solo una vez** (como migraciones, generación de claves y la instalación de dependencias npm).
-- **Comandos que se ejecutan siempre**, como el servidor de desarrollo y otros procesos en segundo plano.
-
-Además, permite controlar qué comandos ejecutar mediante argumentos de línea de comandos o interactuando con el usuario.
-
-## Uso del Script
-
-### Opciones de Línea de Comandos
-
-El script acepta las siguientes opciones para controlar su comportamiento:
-
-- `-s`: Ejecutar solo la migración y seed de la base de datos.
-- `-i`: Generar la clave de la aplicación (`artisan key:generate`).
-- `-k`: Instalar las dependencias de npm.
-- `-n`: Ejecutar todos los comandos de la primera ejecución (migrar, generar clave e instalar npm).
-- `-m`: Saltar los comandos de la primera ejecución y solo ejecutar los comandos principales (como `npm run dev`).
-
-Manejo de Procesos en Segundo Plano
-
-Este script inicia varios procesos en segundo plano, como `npm run dev` y otros servicios (AMQP, métricas, etc.). Si desea detener todos los procesos, puede hacerlo con `Ctrl+C`, y el script se encargará de limpiar los procesos en segundo plano.
-
-  </TabItem>
-
-  <TabItem value="manual" label="Manual" default>
-:::info
-Recuerda que para usar comandos dentro de sail, el contenedor se debe estar ejecutando con `./vendor/bin/sail up -d`
-:::
+Si tienes Composer instalado localmente, simplemente ejecuta:
 
 ```bash
-  ./vendor/bin/sail php artisan serve
-  ./vendor/bin/sail php artisan reverb:start
-  ./vendor/bin/sail php artisan amqp:metrics
-  ./vendor/bin/sail php artisan amqp:consume
-  ./vendor/bin/sail npm run dev
+composer install
 ```
-
-Si no vas a realizar cambios en la interfaz web, puedes remplazar el ultimo comando por
-`./vendor/bin/sail npm run build`
 
   </TabItem>
-
 </Tabs>
 
-# Variables de entorno
+### Configuración de Laravel Sail
 
-copia el archivo .env.docker a .env y modifica los valores a tu gusto.
-Es necesario que ingreses los valores que quieras para identificar el servidor de websockets laravel reverb
+Laravel Sail se instalará automáticamente como parte de las dependencias del proyecto.
 
+## Ejecución de la Aplicación
+
+### Iniciar Contenedores
+
+Para iniciar todos los contenedores definidos en el `docker-compose.yml`, ejecuta:
+
+```bash
+./vendor/bin/sail up -d
 ```
-REVERB_APP_ID=mi-app-id
-REVERB_APP_KEY=clave de mi aplicación
-REVERB_APP_SECRET=mi-secreto-app
+
+El flag `-d` ejecuta los contenedores en modo "detached", permitiéndote seguir usando la terminal.
+
+### Migración de la Base de Datos
+
+Una vez que los contenedores estén en funcionamiento, ejecuta las migraciones y siembra la base de datos:
+
+```bash
+./vendor/bin/sail artisan migrate --seed
 ```
+
+### Configuración de WebSockets
+
+Asegúrate de que las variables de entorno para Reverb (`REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`) estén correctamente configuradas en tu archivo `.env`.
+
+## Ejecución de Servicios Adicionales
+
+Para el funcionamiento completo de la plataforma, necesitas ejecutar varios servicios. Puedes hacerlo manualmente o utilizando el script proporcionado.
+<Tabs groupId="scrips">
+<TabItem value="manual" label="Manual">
+
+### Ejecución Manual
+
+Abre varias terminales y ejecuta cada uno de estos comandos en una terminal separada:
+
+1. Servidor Laravel:
+
+   ```bash
+   ./vendor/bin/sail php artisan serve
+   ```
+
+2. Servidor WebSocket Reverb:
+
+   ```bash
+   ./vendor/bin/sail php artisan reverb:start
+   ```
+
+3. Consumidor de métricas AMQP:
+
+   ```bash
+   ./vendor/bin/sail php artisan amqp:metrics
+   ```
+
+4. Consumidor AMQP general:
+
+   ```bash
+   ./vendor/bin/sail php artisan amqp:consume
+   ```
+
+5. Compilación de assets (en modo de desarrollo):
+
+   ```bash
+   ./vendor/bin/sail npm run dev
+   ```
+
+   O para producción:
+
+   ```bash
+   ./vendor/bin/sail npm run build
+   ```
+
+</TabItem>
+<TabItem value="script" label="Script">
+
+## Uso del Script de Automatización
+
+Se proporciona un script para automatizar la ejecución de estos servicios. El script ofrece varias opciones:
+
+- `-s`: Ejecuta solo la migración y siembra de la base de datos.
+- `-i`: Genera la clave de la aplicación.
+- `-k`: Instala las dependencias de npm.
+- `-n`: Ejecuta todos los comandos de primera ejecución (migrar, generar clave, instalar npm).
+- `-m`: Salta los comandos de primera ejecución y solo ejecuta los comandos principales.
+
+Para utilizar el script:
+
+1. Dale permisos de ejecución:
+
+   ```bash
+   chmod +x start.docker.dev.sh
+   ```
+
+2. Ejecútalo con las opciones deseadas:
+   ```bash
+   ./start.docker.dev.sh -n
+   ```
+
+El script manejará la ejecución de todos los procesos necesarios y los mantendrá en segundo plano. Puedes detener todos los procesos con `Ctrl+C`.
+</TabItem>
+</Tabs>
+
+## Solución de Problemas Comunes
+
+1. **Error de conexión a la base de datos**: Verifica que las credenciales en `.env` coincidan con las configuradas en `docker-compose.yml`.
+
+2. **Los WebSockets no funcionan**: Asegúrate de que las variables de Reverb estén correctamente configuradas y que el servicio `reverb:start` esté en ejecución.
+
+3. **Errores de AMQP**: Verifica que RabbitMQ esté funcionando correctamente dentro de Docker y que las credenciales en `.env` sean correctas. Espera hasta que Rabbitmq haya terminado de iniciar antes de lanzar los comandos de `amqp:metrics` y `amqp:consume`
+
+## Referencias y Recursos Adicionales
+
+- [Documentación oficial de Laravel](https://laravel.com/docs)
+- [Laravel Sail](https://laravel.com/docs/sail)
+- [RabbitMQ](https://www.rabbitmq.com/documentation.html)
+- [Laravel WebSockets (Reverb)](https://laravel.com/docs/11.x/reverb)
+
+Para más información o soporte, consulta la documentación oficial de cada tecnología o abre un issue en el repositorio del proyecto.
