@@ -34,7 +34,7 @@ jobs:
       - name: Build .deb and .rpm packages
         run: |
           cd service
-          bash ./build_package.sh
+          ./build_package.sh
 
       - name: Upload .deb and .rpm to release
         uses: actions/upload-release-asset@v1
