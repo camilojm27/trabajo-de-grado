@@ -14,9 +14,25 @@ class ContainerService
 {
     private int $paginationSize = 10;
 
-    public function getUserContainers(User $user)
+    private function getContainerQuery(?string $search = null): \Illuminate\Database\Eloquent\Builder
     {
-        return Container::with('node')->orderBy('name')
+        $query = Container::with('node')->orderBy('name');
+
+        if ($search) {
+            $searchTerm = strtolower($search);
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('image', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('id', 'like', '%'.$searchTerm.'%');
+            });
+        }
+
+        return $query;
+    }
+
+    public function getUserContainers(User $user, ?string $search = null)
+    {
+        return $this->getContainerQuery($search)
             ->whereHas('node', function ($query) use ($user) {
                 $query->where('created_by', $user->id)
                     ->orWhereHas('users', function ($query) use ($user) {
@@ -25,17 +41,17 @@ class ContainerService
             })->paginate($this->paginationSize)->withQueryString();
     }
 
-    public function getMyContainers(User $user)
+    public function getMyContainers(User $user, ?string $search = null)
     {
-        return Container::with('node')->orderBy('name')
+        return $this->getContainerQuery($search)
             ->whereHas('node', function ($query) use ($user) {
                 $query->where('created_by', $user->id);
             })->paginate($this->paginationSize)->withQueryString();
     }
 
-    public function getAllContainers()
+    public function getAllContainers(?string $search = null)
     {
-        return Container::with('node')->orderBy('name')->paginate($this->paginationSize)->withQueryString();
+        return $this->getContainerQuery($search)->paginate($this->paginationSize)->withQueryString();
     }
 
     public function createContainer(array $data): Container

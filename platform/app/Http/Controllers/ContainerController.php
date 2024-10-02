@@ -38,29 +38,25 @@ class ContainerController extends Controller
 
     public function index(): Response
     {
+        $user = auth()->user();
         $query = request()->query();
-        if (! array_key_exists('tab', $query)) {
-            $containers = $this->containerService->getUserContainers(auth()->user());
-        } else {
-            switch ($query['tab']) {
-                case 'system-containers':
-                    $containers = $this->containerService->getAllContainers();
-                    break;
-                case 'my-containers':
-                    $containers = $this->containerService->getMyContainers(auth()->user());
-                    break;
-                case 'all-containers':
-                    $containers = $this->containerService->getUserContainers(auth()->user());
+        $search = $query['search'] ?? null;
 
-                    break;
-            }
-
-        }
+        $containers = $this->selectContainers($query['tab'] ?? 'default', $user, $search);
 
         return Inertia::render('Container/Containers', [
             'containers' => $containers,
             'queryParams' => request()->query(),
         ]);
+    }
+
+    private function selectContainers(string $tab, $user, ?string $search)
+    {
+        return match ($tab) {
+            'system-containers' => $this->containerService->getAllContainers($search),
+            'my-containers' => $this->containerService->getMyContainers($user, $search),
+            default => $this->containerService->getUserContainers($user, $search),
+        };
     }
 
     public function create(): Response

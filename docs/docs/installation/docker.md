@@ -41,22 +41,25 @@ Antes de comenzar, asegúrate de tener instalado en tu sistema:
    ```
    cp .env.docker .env
    ```
-2. Abre el archivo `.env` con tu editor de texto preferido y configura las siguientes variables:
+2. Abre el archivo `.env` y configura las siguientes variables obligatorias:
 
-   - `APP_NAME`: Nombre de tu aplicación
+En estas variables de entorno puedes poner cualquier valor, unicamente se piden para poder identificar la aplicación y poder cifrar la conección de websockets.
+
+   <!-- - `APP_NAME`: Nombre de tu aplicación
    - `APP_URL`: URL de tu aplicación (por defecto: http://localhost)
-   - `DB_PASSWORD`: Contraseña para la base de datos PostgreSQL
-   - `REVERB_APP_ID`: Identificador único para tu aplicación Reverb
-   - `REVERB_APP_KEY`: Clave de aplicación para Reverb
-   - `REVERB_APP_SECRET`: Secreto de aplicación para Reverb
+   - `DB_PASSWORD`: Contraseña para la base de datos PostgreSQL -->
 
-   Ejemplo de configuración de Reverb:
+- `REVERB_APP_ID`: Identificador único para tu aplicación Reverb
+- `REVERB_APP_KEY`: Clave de aplicación para Reverb
+- `REVERB_APP_SECRET`: Secreto de aplicación para Reverb
 
-   ```
-   REVERB_APP_ID=mi-app-plataforma
-   REVERB_APP_KEY=reverb_key_123456789
-   REVERB_APP_SECRET=reverb_secret_abcdefghijk
-   ```
+Ejemplo de configuración de Reverb:
+
+```
+REVERB_APP_ID=mi-app-plataforma
+REVERB_APP_KEY=reverb_key_123456789
+REVERB_APP_SECRET=reverb_secret_abcdefghijk
+```
 
 ### Instalación de Dependencias
 
@@ -104,14 +107,6 @@ Para iniciar todos los contenedores definidos en el `docker-compose.yml`, ejecut
 
 El flag `-d` ejecuta los contenedores en modo "detached", permitiéndote seguir usando la terminal.
 
-### Migración de la Base de Datos
-
-Una vez que los contenedores estén en funcionamiento, ejecuta las migraciones y siembra la base de datos:
-
-```bash
-./vendor/bin/sail artisan migrate --seed
-```
-
 ### Configuración de WebSockets
 
 Asegúrate de que las variables de entorno para Reverb (`REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`) estén correctamente configuradas en tu archivo `.env`.
@@ -120,6 +115,42 @@ Asegúrate de que las variables de entorno para Reverb (`REVERB_APP_ID`, `REVERB
 
 Para el funcionamiento completo de la plataforma, necesitas ejecutar varios servicios. Puedes hacerlo manualmente o utilizando el script proporcionado.
 <Tabs groupId="scrips">
+<TabItem value="script" label="Script">
+
+## Uso del Script de Automatización
+
+Se proporciona un script para automatizar la ejecución de comandos necesarios para que la aplicación funcione correctamente
+
+El script ofrece las siguentes opciones:
+
+- `-f`: Ejecutarlo solo la primera vez que ejecute la aplicación en el contenedor este comando ejecuta las funcionalidades basicas del script y adicionalmente realiza:
+
+  - Migración de base de datos `php artisan migrate --seed`
+  - Generación de la clave de la aplicación `php artisan key:generate`
+  - Instalar las dependencias de JavaScript `npm install`
+  - Transpilar el código de Typescript a Javascript minificado listo para producción `npm run build`
+
+- `-p`: (Modo Producción) Ejecuta los comandos necesarios para el funcionamiento de la aplicación, usando unicamente el javascrip transpilado. Proporciona un mayor rendimiento a la aplicación pero no actualiza cambios realizados en JavaScript.
+
+Para utilizar el script:
+
+1. Dale permisos de ejecución:
+
+   ```bash
+   chmod +x start.docker.dev.sh
+   ```
+
+2. Ejecútalo la primera vez:
+   ```bash
+   ./vendor/bin/sail shell start.docker.dev.sh -f
+   ```
+3. En adelante:
+   ```bash
+   ./vendor/bin/sail shell start.docker.dev.sh
+   ```
+
+El script manejará la ejecución de todos los procesos necesarios y los mantendrá en segundo plano. Puedes detener todos los procesos con `Ctrl+C`.
+</TabItem>
 <TabItem value="manual" label="Manual">
 
 ### Ejecución Manual
@@ -163,42 +194,11 @@ Abre varias terminales y ejecuta cada uno de estos comandos en una terminal sepa
    ```
 
 </TabItem>
-<TabItem value="script" label="Script">
-
-## Uso del Script de Automatización
-
-Se proporciona un script para automatizar la ejecución de estos servicios. El script ofrece varias opciones:
-
-- `-s`: Ejecuta solo la migración y siembra de la base de datos.
-- `-i`: Genera la clave de la aplicación.
-- `-k`: Instala las dependencias de npm.
-- `-n`: Ejecuta todos los comandos de primera ejecución (migrar, generar clave, instalar npm).
-- `-m`: Salta los comandos de primera ejecución y solo ejecuta los comandos principales.
-
-Para utilizar el script:
-
-1. Dale permisos de ejecución:
-
-   ```bash
-   chmod +x start.docker.dev.sh
-   ```
-
-2. Ejecútalo con las opciones deseadas:
-   ```bash
-   ./start.docker.dev.sh -n
-   ```
-
-El script manejará la ejecución de todos los procesos necesarios y los mantendrá en segundo plano. Puedes detener todos los procesos con `Ctrl+C`.
-</TabItem>
 </Tabs>
 
 ## Solución de Problemas Comunes
 
-1. **Error de conexión a la base de datos**: Verifica que las credenciales en `.env` coincidan con las configuradas en `docker-compose.yml`.
-
-2. **Los WebSockets no funcionan**: Asegúrate de que las variables de Reverb estén correctamente configuradas y que el servicio `reverb:start` esté en ejecución.
-
-3. **Errores de AMQP**: Verifica que RabbitMQ esté funcionando correctamente dentro de Docker y que las credenciales en `.env` sean correctas. Espera hasta que Rabbitmq haya terminado de iniciar antes de lanzar los comandos de `amqp:metrics` y `amqp:consume`
+1. **Errores de AMQP**: Verifica que RabbitMQ esté funcionando correctamente dentro de Docker y que las credenciales en `.env` sean correctas. Espera hasta que Rabbitmq haya terminado de iniciar COMPLETAMENTE antes de lanzar el script o los comandos de `amqp:metrics` y `amqp:consume`
 
 ## Referencias y Recursos Adicionales
 
