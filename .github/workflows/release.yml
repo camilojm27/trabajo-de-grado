@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get install -y ruby ruby-dev gcc make rpm
           sudo gem install --no-document fpm
-          sudo apt-get install -y yq  # For parsing YAML
+          wget https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64.tar.gz -O - |  tar xz && sudo mv yq_linux_amd64 /usr/bin/yq
 
       - name: Build .deb and .rpm packages
         run: |
