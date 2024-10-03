@@ -34,6 +34,7 @@ jobs:
       - name: Build .deb and .rpm packages
         run: |
           cd service
+          chmod +x ./build_package.sh
           ./build_package.sh
 
       - name: Upload .deb and .rpm to release
