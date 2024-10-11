@@ -130,7 +130,7 @@ El script ofrece las siguentes opciones:
   - Instalar las dependencias de JavaScript `npm install`
   - Transpilar el código de Typescript a Javascript minificado listo para producción `npm run build`
 
-- `-p`: (Modo Producción) Ejecuta los comandos necesarios para el funcionamiento de la aplicación, usando unicamente el javascrip transpilado. Proporciona un mayor rendimiento a la aplicación pero no actualiza cambios realizados en JavaScript.
+- `-p`: (Modo "Producción") Ejecuta los comandos necesarios para el funcionamiento de la aplicación, usando unicamente el javascrip transpilado. Proporciona un mayor rendimiento a la aplicación pero no actualiza cambios realizados en JavaScript.
 
 Para utilizar el script:
 

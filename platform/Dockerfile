@@ -4,7 +4,7 @@ FROM ubuntu:24.04
 # Avoid prompts from apt
 ENV DEBIAN_FRONTEND=noninteractive
 
-ENV POSTGRES_USER=myuser
+ENV POSTGRES_USER=pgcuser
 ENV POSTGRES_PASSWORD=1234
 ENV POSTGRES_DB=tg
 
