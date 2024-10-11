@@ -49,13 +49,17 @@ En estas variables de entorno puedes poner cualquier valor, unicamente se piden 
    - `APP_URL`: URL de tu aplicación (por defecto: http://localhost)
    - `DB_PASSWORD`: Contraseña para la base de datos PostgreSQL -->
 
+- `RABBITMQ_PUBLIC_HOST_IP`: IP Publica del servidor de rabbitmq, es muy importante que esté bien configurado este valor ya que sin él los clientes no se pueden conectar.
 - `REVERB_APP_ID`: Identificador único para tu aplicación Reverb
 - `REVERB_APP_KEY`: Clave de aplicación para Reverb
 - `REVERB_APP_SECRET`: Secreto de aplicación para Reverb
+- `REVERB_HOST`: Host publico de la aplicación
 
 Ejemplo de configuración de Reverb:
 
 ```
+
+REVERB_HOST= IP PUBLICA DE LA APLICACIÓN
 REVERB_APP_ID=mi-app-plataforma
 REVERB_APP_KEY=reverb_key_123456789
 REVERB_APP_SECRET=reverb_secret_abcdefghijk
@@ -106,10 +110,6 @@ Para iniciar todos los contenedores definidos en el `docker-compose.yml`, ejecut
 ```
 
 El flag `-d` ejecuta los contenedores en modo "detached", permitiéndote seguir usando la terminal.
-
-### Configuración de WebSockets
-
-Asegúrate de que las variables de entorno para Reverb (`REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`) estén correctamente configuradas en tu archivo `.env`.
 
 ## Ejecución de Servicios Adicionales
 
@@ -195,16 +195,3 @@ Abre varias terminales y ejecuta cada uno de estos comandos en una terminal sepa
 
 </TabItem>
 </Tabs>
-
-## Solución de Problemas Comunes
-
-1. **Errores de AMQP**: Verifica que RabbitMQ esté funcionando correctamente dentro de Docker y que las credenciales en `.env` sean correctas. Espera hasta que Rabbitmq haya terminado de iniciar COMPLETAMENTE antes de lanzar el script o los comandos de `amqp:metrics` y `amqp:consume`
-
-## Referencias y Recursos Adicionales
-
-- [Documentación oficial de Laravel](https://laravel.com/docs)
-- [Laravel Sail](https://laravel.com/docs/sail)
-- [RabbitMQ](https://www.rabbitmq.com/documentation.html)
-- [Laravel WebSockets (Reverb)](https://laravel.com/docs/11.x/reverb)
-
-Para más información o soporte, consulta la documentación oficial de cada tecnología o abre un issue en el repositorio del proyecto.

@@ -10,6 +10,7 @@ import (
 	types2 "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -18,6 +19,8 @@ import (
 func Create(ctx context.Context, containerData types.ContainerRequest) (types2.ContainerJSON, error) {
 	imageName := containerData.Data.Image
 	name := containerData.Data.Name
+	networkName := containerData.Data.Attributes.NetworkName // This can be empty
+
 	envVariables := make([]string, len(containerData.Data.Attributes.Env))
 	for i, env := range containerData.Data.Attributes.Env {
 		if env.Name != "" || env.Value != "" {
@@ -35,6 +38,7 @@ func Create(ctx context.Context, containerData types.ContainerRequest) (types2.C
 	if err != nil {
 		return types2.ContainerJSON{}, err
 	}
+	defer cli.Close()
 
 	if _, _, err := cli.ImageInspectWithRaw(ctx, imageName); err != nil {
 		reader, err := cli.ImagePull(ctx, imageName, image.PullOptions{})
@@ -50,22 +54,45 @@ func Create(ctx context.Context, containerData types.ContainerRequest) (types2.C
 		}
 		fmt.Printf("Successfully pulled image: %s\n", imageName)
 	}
+
+	var networkingConfig *network.NetworkingConfig
+	if networkName != "" {
+		// Check if the network exists, create it if it doesn't
+		_, err = cli.NetworkInspect(ctx, networkName, types2.NetworkInspectOptions{})
+		if client.IsErrNotFound(err) {
+			_, err := cli.NetworkCreate(ctx, networkName, types2.NetworkCreate{
+				Driver: "bridge",
+			})
+			if err != nil {
+				fmt.Printf("Error creating network: %v\n", err)
+				return types2.ContainerJSON{}, err
+			}
+			fmt.Printf("Created network: %s\n", networkName)
+		} else if err != nil {
+			fmt.Printf("Error inspecting network: %v\n", err)
+			return types2.ContainerJSON{}, err
+		}
+
+		networkingConfig = &network.NetworkingConfig{
+			EndpointsConfig: map[string]*network.EndpointSettings{
+				networkName: {},
+			},
+		}
+	}
+
 	config := &container.Config{
 		Image: imageName,
 		Env:   envVariables,
 	}
-
 	if containerData.Data.Attributes.Cmd != "" {
 		config.Cmd = strslice.StrSlice{containerData.Data.Attributes.Cmd}
 	}
-	hostConfig := &container.HostConfig{}
-	//Esto es porque si el front no manda volumenes o está vacio, cuando se creal el contenedor da error
-	if len(volumes) <= 1 {
 
+	hostConfig := &container.HostConfig{}
+	if len(volumes) <= 1 {
 		hostConfig = &container.HostConfig{
 			PortBindings: ports,
 		}
-
 	} else {
 		hostConfig = &container.HostConfig{
 			Binds:        volumes,
@@ -77,7 +104,7 @@ func Create(ctx context.Context, containerData types.ContainerRequest) (types2.C
 		ctx,
 		config,
 		hostConfig,
-		nil,
+		networkingConfig,
 		nil,
 		name,
 	)
@@ -96,8 +123,11 @@ func Create(ctx context.Context, containerData types.ContainerRequest) (types2.C
 		}
 	}
 
-	fmt.Printf("Container %s created successfully\n", resp.ID)
-	defer cli.Close()
+	if networkName != "" {
+		fmt.Printf("Container %s created successfully and joined network %s\n", resp.ID, networkName)
+	} else {
+		fmt.Printf("Container %s created successfully with default network settings\n", resp.ID)
+	}
 	return inspect, nil
 }
 

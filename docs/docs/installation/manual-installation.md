@@ -1,34 +1,48 @@
 ---
 sidebar_label: "Plataforma (manual)"
+sidebar_position: 3
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Guía de Instalación Mejorada para Dependencias de la Plataforma
+# Guía de Instalación
 
-Esta guía proporciona instrucciones detalladas para instalar y configurar las dependencias requeridas para la Plataforma de Gestión de Contenedores. Cubre PostgreSQL, Node.js, PHP con extensiones, Composer y Redis en Ubuntu/Debian, Fedora/RedHat y Docker.
+Esta guía proporciona instrucciones detalladas para instalar y configurar las dependencias requeridas para el funcionamiento de la plataforma
 
 ## Base de Datos: PostgreSQL
 
+:::info
+Puedes usar cualquier base de datos SQL, ya que son compatibles con laravel, asegurate de instalar la extensión php para tu base de datos y de modificar el archivo .env, por ejemplo si quiero usar mysql debo instalar la extension php-mysql y configurar la variable `DB_CONNECTION` con `mysql`
+:::
 <Tabs groupId="operating-systems">
-  <TabItem value="ubuntu" label="Ubuntu/Debian">
+<TabItem value="ubuntu" label="Ubuntu/Debian">
+
+Instalar PostgreSQL
 
 ```bash
-# Instalar PostgreSQL
 sudo apt update
 sudo apt install postgresql postgresql-contrib
+```
 
-# Iniciar el servicio de PostgreSQL
+Iniciar el servicio de PostgreSQL
+
+```bash
+
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
+```
 
-# Crear una base de datos y un usuario
+Crear una base de datos y un usuario (puedes usar el usuario postgres si deseas)
+
+```bash
+
 sudo -u postgres psql
 CREATE DATABASE tg;
 CREATE USER miusuario WITH ENCRYPTED PASSWORD 'micontraseña';
 GRANT ALL PRIVILEGES ON DATABASE tg TO miusuario;
 \q
+
 ```
 
   </TabItem>
@@ -74,7 +88,6 @@ GRANT ALL PRIVILEGES ON DATABASE tg TO miusuario;
   <TabItem value="ubuntu" label="Ubuntu/Debian">
 
 ```bash
-# Instalar Node.js y npm
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
@@ -83,25 +96,25 @@ sudo apt-get install -y nodejs
   <TabItem value="fedora" label="Fedora/RedHat">
 
 ```bash
-# Instalar Node.js y npm
-sudo dnf install nodejs
+sudo dnf install nodejs npm
 ```
 
   </TabItem>
   <TabItem value="docker" label="Docker">
+Tambien ejecutar nodejs o npm desde docker, el siguente comando es un ejemplo
 
 ```bash
-# Usar Node.js en tu Dockerfile
-FROM node:20
-
-# O ejecutar un contenedor de Node.js
-docker run -it --rm node:20 node -v
+docker run -it --rm node:20-slim node -v
 ```
 
   </TabItem>
 </Tabs>
 
-## PHP con Extensiones
+## PHP 8.2 y 8.3
+
+Si tu distribución no provee php 8.2 u 8.3 debes instalar un repositorio externo como:
+
+- https://php.watch/articles/php-8.3-install-upgrade-on-debian-ubuntu
 
 <Tabs groupId="operating-systems">
   <TabItem value="ubuntu" label="Ubuntu/Debian">
@@ -109,13 +122,8 @@ docker run -it --rm node:20 node -v
 ```bash
 # Instalar PHP y extensiones requeridas
 sudo apt update
-sudo apt install php8.2 php8.2-{cli,fpm,pgsql,mbstring,xml,curl,zip,gd,bcmath,ldap,redis,amqp}
+sudo apt install php php-{cli,fpm,pgsql,mbstring,xml,curl,zip,gd,bcmath,ldap,redis,amqp}
 
-# Instalar PECL y la extensión AMQP
-sudo apt install php-pear
-sudo pecl install amqp
-sudo echo "extension=amqp.so" > /etc/php/8.2/mods-available/amqp.ini
-sudo phpenmod amqp
 ```
 
   </TabItem>
@@ -123,33 +131,12 @@ sudo phpenmod amqp
 
 ```bash
 # Instalar PHP y extensiones requeridas
-sudo dnf install php php-{cli,fpm,pgsql,mbstring,xml,curl,zip,gd,bcmath,ldap,redis,amqp}
+sudo dnf install php php-{cli,fpm,pgsql,mbstring,xml,curl,zip,gd,redis,amqp}
 
-# Instalar PECL y la extensión AMQP
-sudo dnf install php-pear
-sudo pecl install amqp
-sudo echo "extension=amqp.so" > /etc/php.d/40-amqp.ini
 ```
 
   </TabItem>
-  <TabItem value="docker" label="Docker">
-
-```dockerfile
-# Usar esto en tu Dockerfile
-FROM php:8.2-fpm
-
-# Instalar dependencias y extensiones de PHP
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    libzip-dev \
-    libgd-dev \
-    librabbitmq-dev \
-    && docker-php-ext-install pdo pdo_pgsql mbstring xml curl zip gd bcmath ldap \
-    && pecl install redis amqp \
-    && docker-php-ext-enable redis amqp
-```
-
-  </TabItem>
+  
 </Tabs>
 
 ## Composer
@@ -178,25 +165,26 @@ sudo mv composer.phar /usr/local/bin/composer
 
   </TabItem>
   <TabItem value="docker" label="Docker">
+  Puedes ejecutar composer desde docker, el siguente comando es un ejemplo
 
-```dockerfile
-# Usar esto en tu Dockerfile
-FROM php:8.2-fpm
-
-# Instalar Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+```bash
+docker run --rm \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd):/var/www/html" \
+    -w /var/www/html \
+    laravelsail/php83-composer:latest \
+    composer --version
 ```
 
   </TabItem>
 </Tabs>
 
-## Redis
+<!-- ## Redis
 
 <Tabs groupId="operating-systems">
   <TabItem value="ubuntu" label="Ubuntu/Debian">
 
 ```bash
-# Instalar Redis
 sudo apt update
 sudo apt install redis-server
 
@@ -238,11 +226,51 @@ docker exec -it redis-cache redis-cli ping
 ```
 
   </TabItem>
-</Tabs>
+</Tabs> -->
 
+<!-- # Configuración de Redis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379 -->
+
+## RabbitMQ
+
+La plataforma utiliza el protocolo AMQP 9-0-1 con la implementación de rabbitmq, es necesario tener instalado:
+
+- RabbitMQ 3.12 o mayor
+- Habilitar el plugin de administración web
+
+tambien puedes acceder a rabbitmq a travez de proveedores como [CloudAMQP](https://www.cloudamqp.com/) y [Stackhero](https://www.stackhero.io/)
+
+<Tabs  groupId="operating-systems">
+  <TabItem value="ubuntu" label="Ubuntu | Debian" default>
+  Puedes instalar rabbitmq a travez de APT, si deseas la ultima versión utiliza los repositorios de rabbitmq https://www.rabbitmq.com/docs/install-debian
+    ```bash
+    sudo apt install rabbitmq-server
+    sudo rabbitmq-plugins enable rabbitmq_management
+    sudo systemctl restart rabbitmq-server
+    sudo systemctl enable rabbitmq-server
+````
+
+  </TabItem>
+  <TabItem value="fedora" label="Fedora | RedHat">
+  Puedes instalar rabbitmq a travez de APT, si deseas la ultima versión utiliza los repositorios de rabbitmq https://www.rabbitmq.com/docs/install-rpm
+      ```
+    sudo dnf install rabbitmq-server
+        sudo rabbitmq-plugins enable rabbitmq_management
+    sudo systemctl restart rabbitmq-server
+    sudo systemctl enable rabbitmq-server
+    ```
+    </TabItem>
+      <TabItem value="docker" label="Docker">
+      ```bash
+    docker run --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
+    ```
+    </TabItem>
+</Tabs>
 ## Configuración para el archivo .env de Laravel
 
-Después de instalar las dependencias, necesitas configurar el archivo `.env` de tu aplicación Laravel. Aquí tienes una explicación de las configuraciones clave:
+Después de instalar las dependencias, necesitas configurar el archivo `.env` de tu aplicación. El archivo .env contiene muchos parametros que se pueden modificar en la aplicación, sin embargo los más importantes son:
 
 ```env
 # Configuración de la base de datos
@@ -253,10 +281,6 @@ DB_DATABASE=tg
 DB_USERNAME=miusuario
 DB_PASSWORD=micontraseña
 
-# Configuración de Redis
-REDIS_HOST=127.0.0.1
-REDIS_PASSWORD=null
-REDIS_PORT=6379
 
 # Configuración de RabbitMQ
 RABBITMQ_HOST=localhost
@@ -266,6 +290,10 @@ RABBITMQ_LOGIN=guest
 RABBITMQ_PASSWORD=guest
 
 # Configuración de Reverb (WebSockets)
+RABBITMQ_PUBLIC_HOST_IP= IP Publica del servidor de rabbitmq, es muy importante que esté bien configurado este valor ya que sin él los clientes no se pueden conectar.
+
+#En estas variables de entorno puedes poner cualquier valor, unicamente se piden para poder identificar la aplicación y poder cifrar la conección de #websockets.
+
 REVERB_APP_ID=tu_app_id
 REVERB_APP_KEY=tu_app_key
 REVERB_APP_SECRET=tu_app_secret

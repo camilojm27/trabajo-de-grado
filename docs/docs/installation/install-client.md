@@ -33,7 +33,7 @@ ejecutar el archivo compilado
 La configuración pide los siguentes datos
 
 - URL de la plataforma
-- Clave de Bienvenida para poder agregar nodos
+- Clave de Bienvenida para poder agregar nodos por defecto es 1234
 - Usuario que registra el nodo `el usuario debe registrarse primero en la plataforma`
 
 :::info

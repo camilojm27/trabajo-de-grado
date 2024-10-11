@@ -121,6 +121,22 @@ export function GeneralSettings({form, nodes}: GeneralSettingsProps) {
                 <FormDescription>Define environment variables for your container.</FormDescription>
             </FormItem>
 
+            <FormField
+                control={control}
+                name="networkName"
+                render={({field}) => (
+                    <FormItem>
+                        <FormLabel>Network</FormLabel>
+                        <FormControl>
+                            <Input placeholder="network name" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                            Write the name of your network, if the network does not exists it will be created on <strong>bridge</strong> mode
+                        </FormDescription>
+                        <FormMessage/>
+                    </FormItem>
+                )}
+            />
             <FormItem>
                 <FormLabel>Puertos</FormLabel>
                 <FormDescription>

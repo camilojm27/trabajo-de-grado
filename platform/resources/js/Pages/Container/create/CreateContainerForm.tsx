@@ -37,6 +37,7 @@ export function CreateContainerForm({ nodes, templates }: CreateContainerFormPro
             ports: [{ hostPort: '', containerPort: '', protocol: 'tcp' }],
             volumes: [{ hostPath: '', containerPath: '' }],
             advanced_bools: ['detach'],
+            networkName: ''
         },
     });
 
@@ -51,6 +52,7 @@ export function CreateContainerForm({ nodes, templates }: CreateContainerFormPro
                 env: data.env,
                 volumes: data.volumes.map(v => (v.hostPath !== '' && v.containerPath !== '') ? `${v.hostPath}:${v.containerPath}` : ''),
                 advanced_bools: data.advanced_bools,
+                networkname: data.networkName
             },
         };
         // @ts-ignore

@@ -23,4 +23,5 @@ export const createContainerSchema = z.object({
         .refine((value) => value.some((item) => item), {
             message: "You have to select at least one item.",
         }),
+    networkName: z.string().max(200),
 });

@@ -44,6 +44,7 @@ type ContainerRequestDataAttributes struct {
 	} `json:"env"`
 	Volumes       []string `json:"volumes"`
 	AdvancedBools []string `json:"advanced_bools"` // Fixed typo
+	NetworkName   string   `json:"networkName"`
 }
 
 type PortBinding struct {
