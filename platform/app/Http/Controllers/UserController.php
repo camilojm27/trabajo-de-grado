@@ -79,4 +79,27 @@ class UserController extends Controller
 
         return redirect()->back()->withErrors(['message' => 'User is already unbanned.']);
     }
+
+    public function update(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:50',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'is_admin' => 'boolean',
+        ]);
+
+        // Prevent modification of the first admin account except by itself
+        if ($user->id === 1 && $request->user()->id !== 1) {
+            return redirect()->back()->withErrors(['message' => 'You cannot modify the primary administrator account.']);
+        }
+
+        // Prevent non-admin users from modifying admin status
+        if (isset($validated['is_admin']) && $request->user()->id !== 1) {
+            return redirect()->back()->withErrors(['message' => 'Only the primary administrator can modify admin privileges.']);
+        }
+
+        $user->update($validated);
+
+        return redirect()->back()->with('success', 'User updated successfully.');
+    }
 }

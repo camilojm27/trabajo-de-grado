@@ -15,16 +15,28 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart"
 
+interface ContainerStateCount {
+    [key: string]: number;
+}
 
-
-export default function ContainerStatusChart({containerStates}: any) {
-    console.log(containerStates)
-
+export default function ContainerStatusChart({containerStates}: { containerStates: ContainerStateCount }) {
+    // Convert containerStates object to array format for chart
     const chartData = Object.entries(containerStates).map(([state, count]) => ({
         state,
         count,
         fill: `var(--color-${state})`
-    }))
+    }));
+
+    // Find the most common state
+    const getMostCommonState = () => {
+        if (!chartData || chartData.length === 0) return null;
+
+        return chartData.reduce((prev, current) => {
+            return (prev.count > current.count) ? prev : current;
+        }).state;
+    };
+
+    const mostCommonState = getMostCommonState();
 
     const chartConfig = Object.fromEntries(
         Object.keys(containerStates).map((state, index) => [
@@ -34,21 +46,19 @@ export default function ContainerStatusChart({containerStates}: any) {
                 color: `hsl(var(--chart-${index + 1}))`
             }
         ])
-    )
+    );
 
-    chartConfig.count = {color: "", label: "Count" }
-
+    chartConfig.count = {color: "", label: "Count"}
 
     const totalContainers = React.useMemo(() => {
         return chartData.reduce((acc, curr) => acc + (curr.count as number), 0);
     }, [chartData]);
 
-
     return (
         <Card className="flex flex-col">
             <CardHeader className="items-center pb-0">
-                <CardTitle>Container States</CardTitle>
-                <CardDescription>Current container states distribution</CardDescription>
+                <CardTitle>Estado de contenedores</CardTitle>
+                <CardDescription>Distribución del estado de los contenedores</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pb-0">
                 <ChartContainer
@@ -58,7 +68,7 @@ export default function ContainerStatusChart({containerStates}: any) {
                     <PieChart>
                         <ChartTooltip
                             cursor={false}
-                            content={<ChartTooltipContent hideLabel />}
+                            content={<ChartTooltipContent hideLabel/>}
                         />
                         <Pie
                             data={chartData}
@@ -68,7 +78,7 @@ export default function ContainerStatusChart({containerStates}: any) {
                             strokeWidth={5}
                         >
                             <Label
-                                content={({ viewBox }) => {
+                                content={({viewBox}) => {
                                     if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                                         return (
                                             <text
@@ -102,10 +112,10 @@ export default function ContainerStatusChart({containerStates}: any) {
             </CardContent>
             <CardFooter className="flex-col gap-2 text-sm">
                 <div className="flex items-center gap-2 font-medium leading-none">
-                    <strong>{chartData[0]?.state}</strong>  is the most common state
+                    <strong>{mostCommonState}</strong> es el estado más común con{' '}
+                    <strong>{containerStates[mostCommonState]}</strong> contenedores
                 </div>
                 <div className="leading-none text-muted-foreground text-center">
-                    Showing current distribution of container states
                 </div>
             </CardFooter>
         </Card>

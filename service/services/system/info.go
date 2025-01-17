@@ -18,6 +18,14 @@ var info = types.SystemInfo{
 	Software: getSoftware(),
 }
 
+func GetCurrentNodeInfo() types.SystemInfo {
+	return types.SystemInfo{
+		OS:       getOS(),
+		Hardware: getHardware(),
+		Software: getSoftware(),
+	}
+}
+
 func runCommand(command string) (string, error) {
 	cmd := exec.Command("sh", "-c", command)
 	output, err := cmd.Output()

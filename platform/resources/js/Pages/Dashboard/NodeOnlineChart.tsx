@@ -37,8 +37,8 @@ export default function NodeOnlineChart({onlineCount, offlineCount}: { onlineCou
     return (
         <Card className="flex flex-col">
             <CardHeader className="items-center pb-0">
-                <CardTitle>Nodes Status</CardTitle>
-                <CardDescription>Online - Offline</CardDescription>
+                <CardTitle>Estado de Nodos</CardTitle>
+                <CardDescription>Activos/Inactivos</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 items-center pb-0">
                 <ChartContainer
@@ -66,14 +66,14 @@ export default function NodeOnlineChart({onlineCount, offlineCount}: { onlineCou
                                                     y={(viewBox.cy || 0) - 16}
                                                     className="fill-foreground text-2xl font-bold"
                                                 >
-                                                    {totalVisitors.toLocaleString()}
+                                                    {totalVisitors}
                                                 </tspan>
                                                 <tspan
                                                     x={viewBox.cx}
                                                     y={(viewBox.cy || 0) + 4}
                                                     className="fill-muted-foreground"
                                                 >
-                                                    Nodes Registered
+                                                    Nodos registrados
                                                 </tspan>
                                             </text>
                                         )

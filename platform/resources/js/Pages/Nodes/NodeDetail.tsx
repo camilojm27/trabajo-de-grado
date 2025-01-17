@@ -83,6 +83,11 @@ export default function NodeDetail({auth, node}: Props) {
             window.Echo.leave(`container-metrics-${node_id}`);
         };
     }, [cpuUsage, ramData, netData]);
+    function bytesToGB(bytes: number) {
+        const GB = 1073741824; // 1 GB = 2^30 bytes
+        return (bytes / GB).toFixed(2) + ' Gb';
+    }
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -115,10 +120,9 @@ export default function NodeDetail({auth, node}: Props) {
                     <div className="max-w-6xl w-full mx-auto grid gap-2">
                         <h1 className="font-semibold text-3xl">Server Details</h1>
                         <div className="flex items-center text-sm gap-2">
-                            <a className="font-medium" href="#" target="_blank">
-                                linux-server.example.com
-                                //
-                            </a>
+                            {/*<a className="font-medium" href="#" target="_blank">*/}
+                            {/*    linux-server.example.com*/}
+                            {/*</a>*/}
                             <Separator className="h-5" orientation="vertical"/>
                             {node.isOnline ? (
                                 <Badge className="bg-green-200 text-green-800" variant="outline">
@@ -142,23 +146,23 @@ export default function NodeDetail({auth, node}: Props) {
                                 </div>
                                 <div className="flex items-center">
                                     <div>RAM</div>
-                                    <div className="font-semibold ml-auto">{attributes.hardware.ram}</div>
+                                    <div className="font-semibold ml-auto">{bytesToGB(attributes.hardware.ram)}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>SWAP</div>
-                                    <div className="font-semibold ml-auto">{attributes.hardware.swap}</div>
+                                    <div className="font-semibold ml-auto">{bytesToGB(attributes.hardware.swap)}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>Disk (root "/")</div>
-                                    <div className="font-semibold ml-auto">{attributes.hardware.disk}</div>
+                                    <div className="font-semibold ml-auto">{bytesToGB(attributes.hardware.disk)}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>Disk Available (root "/")</div>
-                                    <div className="font-semibold ml-auto">{attributes.hardware.disk_available}</div>
+                                    <div className="font-semibold ml-auto">{bytesToGB(attributes.hardware.disk_available)}</div>
                                 </div>
                                 <div className="flex items-center">
                                     <div>GPU</div>
-                                    <div className="font-semibold ml-auto">{attributes.hardware.gpu}</div>
+                                    <div className="font-semibold ml-auto">{bytesToGB(attributes.hardware.gpu)}</div>
                                 </div>
                             </CardContent>
                         </Card>

@@ -32,6 +32,8 @@ func RunStartCommand(cmd *cobra.Command, args []string, apiEndpoint string) {
 
 	go docker.SendContainersListBasedOnEventsAndTime(client, ctxTime)
 
+	go system.SendNodeInfoPeriodically(ctx, client)
+
 	handler := func(d amqp091.Delivery) {
 		var message types.ContainerRequest
 		err := json.Unmarshal(d.Body, &message)
@@ -90,7 +92,7 @@ func RunStartCommand(cmd *cobra.Command, args []string, apiEndpoint string) {
 			docker.LogFile(ctxLogFile, *message.Data, apiEndpoint)
 		// ----------------- Host Actions -----------------
 		case "METRICS:HOST":
-			ctxHostMetrics, _ := context.WithTimeout(ctx, time.Second*30)
+			ctxHostMetrics, _ := context.WithTimeout(ctx, time.Minute*5)
 			go system.HostMetrics(ctxHostMetrics, client)
 		case "METRICS:HOST:CPU":
 

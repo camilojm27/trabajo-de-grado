@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,6 +10,8 @@ import (
 
 	"github.com/camilojm27/trabajo-de-grado/service/services"
 	ty "github.com/camilojm27/trabajo-de-grado/service/types"
+
+	"github.com/camilojm27/trabajo-de-grado/service/pkg/util"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/rabbitmq/amqp091-go"
@@ -23,13 +24,14 @@ var (
 
 func Logs(ctx context.Context, rclient *services.RabbitMQClient, containerID string) error {
 	nodeId := ctx.Value("nodeId").(string)
-	fmt.Println("LOGS CALLED")
 
+	fmt.Println("LOGS CALLED")
 	logsMutex.Lock()
 	defer logsMutex.Unlock()
 
 	if !runningLogs[containerID] {
 		runningLogs[containerID] = true
+
 		go func() {
 			defer func() {
 				logsMutex.Lock()
@@ -38,19 +40,14 @@ func Logs(ctx context.Context, rclient *services.RabbitMQClient, containerID str
 			}()
 
 			fmt.Println("LOGS STARTED")
+
 			cli, err := client.NewClientWithOpts(client.FromEnv)
 			if err != nil {
 				log.Printf("failed to create docker client: %v", err)
 				return
 			}
 
-			options := container.LogsOptions{
-				ShowStdout: true,
-				ShowStderr: true,
-				Follow:     true,
-				Tail:       "1000",
-			}
-
+			options := container.LogsOptions{ShowStdout: true, ShowStderr: true, Follow: true, Tail: "1000"}
 			logs, err := cli.ContainerLogs(context.Background(), containerID, options)
 			if err != nil {
 				log.Printf("failed to get logs for container %s: %v", containerID, err)
@@ -63,65 +60,67 @@ func Logs(ctx context.Context, rclient *services.RabbitMQClient, containerID str
 				ContainerID: containerID,
 			}
 
-			reader := bufio.NewReader(logs)
+			// Create a larger buffer to handle varying log sizes
+			buffer := make([]byte, 32*1024)
+			headerSize := 8 // Docker log header size
+
 			for {
-				// Read the first byte to determine the stream type
-				streamType, err := reader.ReadByte()
+				n, err := logs.Read(buffer)
 				if err != nil {
 					if err == io.EOF {
 						break
 					}
-					log.Printf("failed to read log header: %v", err)
+					log.Printf("Error reading logs: %v", err)
 					continue
 				}
 
-				// Skip the next 7 bytes (rest of the header)
-				_, err = reader.Discard(7)
-				if err != nil {
-					log.Printf("failed to discard header bytes: %v", err)
-					continue
+				// Process the buffer in chunks, removing headers
+				processed := make([]byte, 0, n)
+				for i := 0; i < n; {
+					// Ensure we have enough bytes for a header
+					if i+headerSize > n {
+						break
+					}
+
+					// Get the message length from the header (last 4 bytes)
+					messageLength := int(buffer[i+4])<<24 | int(buffer[i+5])<<16 | int(buffer[i+6])<<8 | int(buffer[i+7])
+
+					// Skip the header
+					i += headerSize
+
+					// Ensure we have enough bytes for the message
+					if i+messageLength > n {
+						break
+					}
+
+					// Append the message without the header
+					processed = append(processed, buffer[i:i+messageLength]...)
+					i += messageLength
 				}
 
-				// Read the actual log line
-				line, err := reader.ReadString('\n')
-				if err != nil && err != io.EOF {
-					log.Printf("failed to read log line: %v", err)
-					continue
-				}
+				if len(processed) > 0 {
+					fmt.Print(string(processed))
+					sendLogs.Logs = util.SafeString(processed)
+					jsonDataBytes, err := json.Marshal(sendLogs)
 
-				// Determine the stream prefix
-				var prefix string
-				if streamType == 1 {
-					prefix = "[stdout] "
-				} else if streamType == 2 {
-					prefix = "[stderr] "
-				}
+					if err != nil {
+						fmt.Println(err)
+						continue
+					}
 
-				// Combine prefix and line
-				logLine := prefix + line
-
-				fmt.Print(logLine)
-				jsonDataBytes, err := json.Marshal(sendLogs)
-				if err != nil {
-					fmt.Println(err)
-					continue
-				}
-
-				sendLogsToRabbitMQ(ctx, rclient, jsonDataBytes)
-
-				if err == io.EOF {
-					break
+					sendLogsToRabbitMQ(ctx, rclient, jsonDataBytes)
 				}
 			}
-			ctx.Done()
+
 			select {
+			default:
 			case <-ctx.Done():
 				logsMutex.Lock()
 				delete(runningLogs, containerID)
 				logsMutex.Unlock()
 				logs.Close()
 				fmt.Printf("DONE LOGS containerID: %s\n", containerID)
-			default:
+				return
 			}
 		}()
 	} else {
@@ -132,7 +131,6 @@ func Logs(ctx context.Context, rclient *services.RabbitMQClient, containerID str
 }
 
 func sendLogsToRabbitMQ(ctx context.Context, client *services.RabbitMQClient, jsonDataBytes []byte) {
-
 	err := client.Publish(ctx, "", "containers-logs", false, false, amqp091.Publishing{
 		ContentType:  "application/json",
 		Body:         jsonDataBytes,

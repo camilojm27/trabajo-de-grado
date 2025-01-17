@@ -75,6 +75,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::patch('/users/ban/{user}', [UserController::class, 'ban'])->name('user.ban');
     Route::patch('/users/unban/{user}', [UserController::class, 'unban'])->name('user.unban');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('user.delete');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
 
 });
 Route::get('/dashboard', [Statistics::class, 'dashboard'])->name('dashboard');

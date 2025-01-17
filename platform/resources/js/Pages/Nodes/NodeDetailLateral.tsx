@@ -22,7 +22,7 @@ import {
 import {Separator} from "@/components/ui/separator";
 import {Pagination, PaginationContent, PaginationItem} from "@/components/ui/pagination";
 import {Node} from "@/types/node";
-import React, {useMemo} from "react";
+import React, {useMemo, useState} from "react";
 import {NodeAddUsers} from "@/Pages/Nodes/NodeAddUsers";
 import {Link, router} from "@inertiajs/react";
 import {toast} from "@/components/ui/use-toast";
@@ -30,8 +30,21 @@ import {toast} from "@/components/ui/use-toast";
 interface NodesProps {
     node: Node
 }
+const formatBytes = (bytes: number, decimals = 2) => {
+    if (!bytes) return '0 GB';
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
 
 export function NodeDetailLateral({node}: NodesProps) {
+    const [selectedTab, setSelectedTab] = useState('hardware');
+
+
     if (!node) {
         return null;
     }
@@ -48,6 +61,18 @@ export function NodeDetailLateral({node}: NodesProps) {
             };
         }
     }, [node.attributes]);
+
+    const hardwareInfo = [
+        { label: 'RAM', value: formatBytes(parsedAttributes.hardware.ram) },
+        { label: 'RAM Speed', value: parsedAttributes.hardware.mhz },
+        { label: 'SWAP', value: formatBytes(parsedAttributes.hardware.swap) },
+        { label: 'Disk', value: formatBytes(parsedAttributes.hardware.disk) },
+        { label: 'Available Disk', value: formatBytes(parsedAttributes.hardware.disk_available) },
+        { label: 'CPU', value: parsedAttributes.hardware.cpu },
+        { label: 'Cores', value: parsedAttributes.hardware.cores },
+        { label: 'GPU', value: parsedAttributes.hardware.gpu },
+    ];
+
 
     function handleDelete(id: string) {
         router.delete(`/nodes/${id}`, {
@@ -158,47 +183,17 @@ export function NodeDetailLateral({node}: NodesProps) {
                     </ul>
                 </div>
                 <Separator className="my-4"/>
-                <div className="grid gap-3">
-                    <div className="font-semibold">Hardware Information</div>
-                    <ul className="grid gap-3">
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">CPU</span>
-                            <span>{parsedAttributes.hardware.cpu}</span>
-                        </li>
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Cores</span>
-                            <span>{parsedAttributes.hardware.cores}</span>
-                        </li>
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Threads</span>
-                            <span>{parsedAttributes.hardware.threats}</span>
-                        </li>
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Clock Speed</span>
-                            <span>{parsedAttributes.hardware.mhz}</span>
-                        </li>
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">RAM</span>
-                            <span>{parsedAttributes.hardware.ram}</span>
-                        </li>
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Swap</span>
-                            <span>{parsedAttributes.hardware.swap}</span>
-                        </li>
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Disk</span>
-                            <span>{parsedAttributes.hardware.disk}</span>
-                        </li>
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Available Disk</span>
-                            <span>{parsedAttributes.hardware.disk_available}</span>
-                        </li>
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">GPU</span>
-                            <span>{parsedAttributes.hardware.gpu}</span>
-                        </li>
-                    </ul>
-                </div>
+                    <div className="grid gap-3">
+                        <div className="font-semibold">Hardware Information</div>
+                        <ul className="grid gap-3">
+                            {hardwareInfo.map((item, index) => (
+                                <li key={index} className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">{item.label}</span>
+                                    <span>{item.value}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 <Separator className="my-4"/>
                 <div className="grid gap-3">
                     <div className="font-semibold">OS Information</div>

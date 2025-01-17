@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nginx \
     supervisor \
+    htop \
     nano \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -70,8 +71,8 @@ RUN apt-get update && apt-get install -y postgresql postgresql-contrib \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && service postgresql start \
-    && su - postgres -c "psql --command \"CREATE USER $POSTGRES_USER WITH SUPERUSER PASSWORD '$POSTGRES_PASSWORD';\"" \
-    && su - postgres -c "createdb -O $POSTGRES_USER $POSTGRES_DB"
+    && su - postgres -c "psql --command \"ALTER USER postgres WITH PASSWORD '1234';\"" \
+    && su - postgres -c "createdb $POSTGRES_DB"
 
 # Set up Nginx
 COPY nginx.conf /etc/nginx/sites-available/default

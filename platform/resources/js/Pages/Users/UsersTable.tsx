@@ -13,6 +13,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
+import EditUserDialog from "./EditUserDialog";
 
 interface UsersProps {
     users: PaginationI<User>
@@ -142,19 +143,18 @@ export default function UsersTable({users}: UsersProps) {
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction  onClick={() => handleDelete(user.id)}>Delete</AlertDialogAction>
+                                                    <AlertDialogAction onClick={() => handleDelete(user.id)}>Delete</AlertDialogAction>
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>
                                         </AlertDialog>
-                                        <Button variant='secondary'><UserRoundPen/>Edit User</Button>
-                                        {
-                                            user.is_banned ?
-                                                <Button variant='secondary'
-                                                        onClick={() => handleUnban(user.id)}><UserCheck/>Unblock
-                                                    User</Button>
-                                                :
-                                                <Button variant='secondary'
-                                                        onClick={() => handleBan(user.id)}><UserX/> Block User</Button>
+                                        <EditUserDialog user={user} />
+                                        {user.is_banned ?
+                                            <Button variant='secondary'
+                                                    onClick={() => handleUnban(user.id)}><UserCheck/>Unblock
+                                                User</Button>
+                                            :
+                                            <Button variant='secondary'
+                                                    onClick={() => handleBan(user.id)}><UserX/> Block User</Button>
                                         }
                                     </TableCell>
                                 </TableRow>

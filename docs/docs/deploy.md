@@ -50,7 +50,7 @@ REVERB_APP_SECRET=
 
 - Correr la imagen
 
-`docker run -d -p 80:80 -p 5432:5432 -p 15672:15672 -p 5672:5672 --name plataforma-gestion-contenedores plataforma-gestion-contenedores`
+`docker run -d -p 80:80 -p 5432:5432 -p 15672:15672 -p 5672:5672 -p 8080:8080 --name plataforma-gestion-contenedores plataforma-gestion-contenedores`
 
 - Entrar a la imagen para ejecutar la migración en la base de datos y crear la
 

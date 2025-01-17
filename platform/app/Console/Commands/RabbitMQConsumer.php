@@ -139,6 +139,9 @@ class RabbitMQConsumer extends Command
             case 'UNPAUSE:CONTAINER':
                 $this->handleContainerAction($messageData, 'unpaused');
                 break;
+            case 'NODE:UPDATE':
+                $this->handleNodeUpdate($messageData);
+                break;
         }
         $this->info('done');
 
@@ -217,5 +220,20 @@ class RabbitMQConsumer extends Command
         }
         ContainerProcessed::dispatch($node_id);
 
+    }
+
+    private function handleNodeUpdate(array $messageData): void
+    {
+        try {
+            $node = Node::findOrFail($messageData['node_id']);
+
+            // Actualizar los atributos del nodo
+            $node->attributes = $messageData['data']['attributes'];
+            $node->save();
+
+            $this->info('Node '.$node->id.' updated successfully');
+        } catch (\Exception $e) {
+            $this->error('Error updating node: '.$e->getMessage());
+        }
     }
 }

@@ -15,7 +15,7 @@ import (
 // joinCmd represents the join command
 var joinCmd = &cobra.Command{
 	Use:   "join",
-	Short: "",
+	Short: "Comando para registrar un nodo",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		app := viper.Get("APP_URL")
